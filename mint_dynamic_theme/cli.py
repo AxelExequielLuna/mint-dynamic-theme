@@ -101,9 +101,14 @@ def cmd_set(args):
         # OR we just apply it directly here.
         
         themes = ThemeService.get_themes_for_color(color)
+        applied_any = False
         for k, v in themes.items():
-            d.desktop_env.apply_theme(k, v)
-        print(f"Applied {color} theme.")
+            if d.desktop_env.apply_theme(k, v):
+                applied_any = True
+        
+        if applied_any:
+            ThemeService.notify_change(color)
+            print(f"Applied {color} theme.")
     else:
         print("Could not detect current wallpaper.")
 
