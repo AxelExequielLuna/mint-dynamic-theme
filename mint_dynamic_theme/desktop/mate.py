@@ -1,0 +1,1 @@
+from .cinnamon import MateDesktop
