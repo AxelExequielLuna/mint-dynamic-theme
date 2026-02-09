@@ -32,6 +32,12 @@ A daemon that automatically changes your GTK, Icon, and Desktop theme based on y
    ```bash
    pip3 install --user . --break-system-packages
    ```
+   
+   **To update the already installed version:**
+   ```bash
+   pip3 install --user --upgrade . --break-system-packages
+   ```
+
    *Note: On recent Debian/Ubuntu/Mint versions, `--break-system-packages` is required to install outside a venv/apt, even for user installs. This is safe for user-level tools.*
 
 3. Install Systemd Service (Optional but recommended for auto-start):
