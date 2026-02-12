@@ -7,9 +7,12 @@ from typing import Optional, Dict, Any
 log = logging.getLogger("mint-dynamic-theme")
 
 # ==================== CONSTANTES ====================
+# ==================== CONSTANTES ====================
 HOME = os.path.expanduser("~")
-CACHE_DIR = f"{HOME}/.cache/mint-dynamic-theme"
-CONFIG_FILE = f"{CACHE_DIR}/config.json"
+XDG_CONFIG_HOME = os.getenv("XDG_CONFIG_HOME", f"{HOME}/.config")
+CONFIG_DIR = f"{XDG_CONFIG_HOME}/mint-dynamic-theme"
+
+CONFIG_FILE = f"{CONFIG_DIR}/config.json"
 
 DEFAULT_COLOR_QUALITY = 20
 DEFAULT_CACHE_SIZE = 32
@@ -18,14 +21,14 @@ MAX_LOG_SIZE = 10 * 1024 * 1024  # 10MB
 CONFIG_PATHS = {
     "color_quality": int(os.getenv("COLOR_QUALITY", str(DEFAULT_COLOR_QUALITY))),
     "cache_size": int(os.getenv("CACHE_SIZE", str(DEFAULT_CACHE_SIZE))),
-    "log_file": f"{CACHE_DIR}/errors.log",
-    "pid_file": f"{CACHE_DIR}/daemon.pid",
-    "wall_file": f"{CACHE_DIR}/wallpaper.json",
+    "log_file": f"{CONFIG_DIR}/errors.log",
+    "pid_file": f"{CONFIG_DIR}/daemon.pid",
+    "wall_file": f"{CONFIG_DIR}/wallpaper.json",
     "xfce_wallpaper_dir": f"{HOME}/.cache/xfce4/desktop",
 }
 
-# Ensure cache directory exists
-os.makedirs(CACHE_DIR, exist_ok=True)
+# Ensure config directory exists
+os.makedirs(CONFIG_DIR, exist_ok=True)
 
 class DynamicConfig:
     """
