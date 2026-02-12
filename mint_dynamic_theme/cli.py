@@ -125,13 +125,21 @@ def cmd_notify(args):
     else:
         print("Error: Use 'on' or 'off'")
 
+def cmd_clear_history():
+    from .config import MANUAL_WALL
+    try:
+        MANUAL_WALL.clear_history()
+        print("✓ Manual wallpaper history cleared.")
+    except Exception as e:
+        print(f"Error clearing history: {e}")
+
 def cmd_about():
     about_info = {
         "app": "Mint Dynamic Theme",
         "version": "1.6.0",
         "author": "Axeleif",
         "description": "Dynamic theme switcher for Linux Mint (Cinnamon, MATE, XFCE) based on wallpaper color.",
-        "commands": ["start", "stop", "status", "list", "set", "about", "notify"]
+        "commands": ["start", "stop", "status", "list", "set", "about", "notify", "clear-history"]
     }
     # Print as JSON for consistency with original or just text? Original used JSON.
     import json
@@ -153,6 +161,8 @@ def main():
     set_parser = subparsers.add_parser("set", help="Manually set theme for current wallpaper")
     set_parser.add_argument("color", help="Color name (e.g. Red, Blue)")
 
+    subparsers.add_parser("clear-history", help="Clear manual wallpaper history")
+
     args = parser.parse_args()
 
     if args.command == "start":
@@ -169,6 +179,8 @@ def main():
         cmd_notify(args)
     elif args.command == "set":
         cmd_set(args)
+    elif args.command == "clear-history":
+        cmd_clear_history()
     else:
         parser.print_help()
 
