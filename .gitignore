@@ -1,0 +1,30 @@
+# Virtual Environment
+venv/
+.venv/
+env/
+
+# Python Build / Packaging
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Testing Cache
+.pytest_cache/
+.coverage
+htmlcov/
+tests/__pycache__/
+mint_dynamic_theme/__pycache__/
+mint_dynamic_theme/desktop/__pycache__/
+
+# System / Cache Files
+*.tmp
+*.log
+*.pid
+.vscode/
+
+# Project Archive
+archive/
