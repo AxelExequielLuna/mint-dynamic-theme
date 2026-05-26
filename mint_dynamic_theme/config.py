@@ -39,7 +39,7 @@ class DynamicConfig:
     def __init__(self):
         self.file = CONFIG_FILE
         self.mtime = 0
-        self.data = {"notifications": True}
+        self.data = {"notifications": True, "tray_autostart": False, "paused": False}
         self.load()
 
     def load(self) -> None:
@@ -56,20 +56,20 @@ class DynamicConfig:
             with open(self.file, 'r') as f:
                 content = f.read()
                 if not content.strip():
-                    self.data = {"notifications": True}
+                    self.data = {"notifications": True, "tray_autostart": False, "paused": False}
                 else:
                     loaded_data = json.loads(content)
                     if not isinstance(loaded_data, dict):
                         log.error("Config file contiene datos inválidos")
-                        self.data = {"notifications": True}
+                        self.data = {"notifications": True, "tray_autostart": False, "paused": False}
                     else:
-                        self.data = {**{"notifications": True}, **loaded_data}
+                        self.data = {**{"notifications": True, "tray_autostart": False, "paused": False}, **loaded_data}
 
             self.mtime = mtime
 
         except json.JSONDecodeError as e:
             log.error(f"Error parseando JSON en config: {e}")
-            self.data = {"notifications": True}
+            self.data = {"notifications": True, "tray_autostart": False, "paused": False}
         except OSError as e:
             log.error(f"Error leyendo config file: {e}")
 
@@ -101,6 +101,26 @@ class DynamicConfig:
         state: True para activar, False para desactivar
         """
         self.data["notifications"] = bool(state)
+        self.save()
+
+    def get_tray_autostart(self) -> bool:
+        """Obtiene si el tray icon debe iniciarse automáticamente."""
+        self.load()
+        return bool(self.data.get("tray_autostart", False))
+
+    def set_tray_autostart(self, state: bool) -> None:
+        """Establece si el tray icon debe iniciarse automáticamente."""
+        self.data["tray_autostart"] = bool(state)
+        self.save()
+
+    def get_paused(self) -> bool:
+        """Obtiene si el daemon de monitoreo está pausado."""
+        self.load()
+        return bool(self.data.get("paused", False))
+
+    def set_paused(self, state: bool) -> None:
+        """Establece si el daemon de monitoreo está pausado."""
+        self.data["paused"] = bool(state)
         self.save()
 
 

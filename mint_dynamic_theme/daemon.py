@@ -30,6 +30,16 @@ class Daemon:
 
     def run(self) -> None:
         log.info(f"Starting daemon for {type(self.desktop_env).__name__}")
+        import signal
+        import sys
+
+        def sigterm_handler(signum, frame):
+            log.info("Received SIGTERM. Stopping daemon...")
+            self.stop()
+            sys.exit(0)
+
+        signal.signal(signal.SIGTERM, sigterm_handler)
+
         try:
             self._process() # Initial run
             self.desktop_env.monitor_changes(self._process)
@@ -43,7 +53,8 @@ class Daemon:
         self.desktop_env.stop_monitoring()
 
     def _process(self) -> None:
-        if self.paused or not self.running: return
+        from .config import CONFIG_MANAGER
+        if CONFIG_MANAGER.get_paused() or not self.running: return
 
         try:
             wallpaper = self.desktop_env.get_wallpaper()

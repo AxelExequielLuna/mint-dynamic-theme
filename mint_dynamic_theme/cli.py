@@ -139,11 +139,35 @@ def cmd_about():
         "version": "1.6.0",
         "author": "Axeleif",
         "description": "Dynamic theme switcher for Linux Mint (Cinnamon, MATE, XFCE) based on wallpaper color.",
-        "commands": ["start", "stop", "status", "list", "set", "about", "notify", "clear-history"]
+        "commands": ["start", "stop", "status", "list", "set", "about", "notify", "clear-history", "tray", "tray-autostart"]
     }
     # Print as JSON for consistency with original or just text? Original used JSON.
     import json
     print(json.dumps(about_info, indent=2))
+
+def cmd_tray():
+    try:
+        from .tray import MDTTrayApp
+        print("Starting native Tray Icon...")
+        app = MDTTrayApp()
+        app.run()
+    except Exception as e:
+        print(f"Error starting tray app: {e}")
+
+def cmd_tray_autostart(args):
+    from .tray import manage_autostart_desktop_file
+    from .config import CONFIG_MANAGER
+    state = args.state.lower()
+    if state in ["on", "true", "1"]:
+        manage_autostart_desktop_file(True)
+        CONFIG_MANAGER.set_tray_autostart(True)
+        print("✓ Tray autostart enabled.")
+    elif state in ["off", "false", "0"]:
+        manage_autostart_desktop_file(False)
+        CONFIG_MANAGER.set_tray_autostart(False)
+        print("✓ Tray autostart disabled.")
+    else:
+        print("Error: Use 'on' or 'off'")
 
 def main():
     parser = argparse.ArgumentParser(description="Mint Dynamic Theme (mdt)")
@@ -163,6 +187,11 @@ def main():
 
     subparsers.add_parser("clear-history", help="Clear manual wallpaper history")
 
+    subparsers.add_parser("tray", help="Start the native tray icon")
+    
+    tray_autostart_parser = subparsers.add_parser("tray-autostart", help="Enable/Disable tray autostart with the desktop")
+    tray_autostart_parser.add_argument("state", help="on/off")
+
     args = parser.parse_args()
 
     if args.command == "start":
@@ -181,6 +210,10 @@ def main():
         cmd_set(args)
     elif args.command == "clear-history":
         cmd_clear_history()
+    elif args.command == "tray":
+        cmd_tray()
+    elif args.command == "tray-autostart":
+        cmd_tray_autostart(args)
     else:
         parser.print_help()
 

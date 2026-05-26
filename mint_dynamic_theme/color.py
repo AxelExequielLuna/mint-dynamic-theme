@@ -23,14 +23,14 @@ SAND_LIGHTNESS_THRESHOLD = 0.75
 YELLOW_TO_SAND_LIGHTNESS = 0.8
 ORANGE_TO_BROWN_LIGHTNESS = 0.3
 BLUE_TO_NAVY_LIGHTNESS = 0.25
-
 class ColorService:
     @staticmethod
     @lru_cache(maxsize=32)
-    def get_dominant_color(path: str, quality: int = 10, resize_max: int = 250) -> Optional[Tuple[int, int, int]]:
+    def get_dominant_color(path: str, resize_max: int = 300) -> Optional[Tuple[int, int, int]]:
         """
         Extracts dominant color from image.
-        Optimized by using a thumbnail if image is large.
+        Optimized by physically resizing image using Pillow with high-quality LANCZOS filter
+        to maintain maximum precision while consuming minimal RAM/CPU.
         """
         if not COLORTHIEF_AVAILABLE:
             return None
@@ -41,33 +41,32 @@ class ColorService:
             return None
 
         try:
-            # ColorThief doesn't natively support resizing in its constructor easily without PIL
-            # But ColorThief uses PIL internally.
+            from PIL import Image
+            import io
+
+            # Open image
+            img = Image.open(path)
             
-            # Optimization: 
-            # We will use ColorThief as normal but ensure quality is not too high (lower number = slower)
-            # A quality of 10-20 is usually a good balance.
-            # 
-            # Note: Implementing manual resize before ColorThief would require importing PIL directly here.
-            # ColorThief(file) opens the file. 
+            # Fallback for different Pillow versions for LANCZOS filter
+            resample_filter = getattr(Image, "Resampling", None)
+            if resample_filter is not None:
+                filter_type = resample_filter.LANCZOS
+            else:
+                filter_type = getattr(Image, "LANCZOS", getattr(Image, "ANTIALIAS", 1))
+
+            # Resize maintaining aspect ratio
+            img.thumbnail((resize_max, resize_max), filter_type)
             
-            color_thief = ColorThief(path)
-            
-            # ColorThief.get_color(quality=N)
-            # quality=1 is highest (check every pixel), quality=10 checks every 10th pixel.
-            # For 4K images, checking every 10th pixel is still a lot.
-            # But we want to follow legal/standard usage of the lib.
-            
-            # If we wanted to resize, we'd need to do:
-            # image = Image.open(path)
-            # image.thumbnail((resize_max, resize_max))
-            # ... pass image to ColorThief ... but ColorThief expects a file-like or path.
-            # 
-            # Actually ColorThief(file_object) works.
-            # But let's stick to the standard usage with adjusted quality for now to avoid extra dependencies if possible,
-            # OR we trust PIL is there (it is a dependency of ColorThief).
-            
-            color = color_thief.get_color(quality=quality)
+            # Save to in-memory bytes stream
+            img_bytes = io.BytesIO()
+            img.save(img_bytes, format="PNG")
+            img_bytes.seek(0)
+
+            # Extract color
+            color_thief = ColorThief(img_bytes)
+            # Since the image is already small (300x300 max), quality=1 is extremely fast
+            # and gives the absolute highest precision.
+            color = color_thief.get_color(quality=1)
             
             if not isinstance(color, (tuple, list)) or len(color) != 3:
                 return None
