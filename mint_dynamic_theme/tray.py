@@ -68,9 +68,10 @@ class MDTTrayApp:
         self.icon.set_tooltip_text("Mint Dynamic Theme")
         self.icon.set_icon_name("preferences-desktop-wallpaper")
         
-        # Connect primary/secondary action triggers
+        # XApp.StatusIcon emits 'activate' with (icon, button, time).
+        # Both left and right clicks arrive here; we use the button number
+        # to distinguish them if needed, but we always show the menu.
         self.icon.connect("activate", self.on_activate)
-        self.icon.connect("popup-menu", self.on_popup_menu)
         
         # Menu state variables
         self.menu = None
@@ -169,12 +170,8 @@ class MDTTrayApp:
         self.refresh_menu_labels()
         return menu
 
-    def on_activate(self, icon: XApp.StatusIcon) -> None:
-        """Handle left-click by showing the menu immediately."""
-        self.popup_menu(1, Gtk.get_current_event_time())
-
-    def on_popup_menu(self, icon: XApp.StatusIcon, button: int, time: int) -> None:
-        """Handle right-click by showing the context menu."""
+    def on_activate(self, icon: XApp.StatusIcon, button: int, time: int) -> None:
+        """Handle click on the tray icon (any mouse button)."""
         self.popup_menu(button, time)
 
     def popup_menu(self, button: int, time: int) -> None:

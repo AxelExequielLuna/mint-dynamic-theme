@@ -6,10 +6,9 @@ Wants=graphical-session.target
 [Service]
 Type=simple
 ExecStart=%h/.local/bin/mdt start
-Restart=always
+Restart=on-failure
 RestartSec=5
-StandardOutput=journal
-StandardError=journal
 
 [Install]
 WantedBy=default.target
+

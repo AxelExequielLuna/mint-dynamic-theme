@@ -136,7 +136,7 @@ def cmd_clear_history():
 def cmd_about():
     about_info = {
         "app": "Mint Dynamic Theme",
-        "version": "1.6.0",
+        "version": "4.0.0",
         "author": "Axeleif",
         "description": "Dynamic theme switcher for Linux Mint (Cinnamon, MATE, XFCE) based on wallpaper color.",
         "commands": ["start", "stop", "status", "list", "set", "about", "notify", "clear-history", "tray", "tray-autostart"]
