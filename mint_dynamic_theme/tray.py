@@ -21,7 +21,7 @@ except ImportError as e:
 from .config import CONFIG_MANAGER, MANUAL_WALL
 from .daemon import Daemon
 from .metadata import APP_INFO
-from .theme import THEME_MAPPING, ThemeService
+from .theme import THEME_MAPPING
 from .utils import get_daemon_status
 
 
@@ -251,25 +251,10 @@ class MDTTrayApp:
         log.info(f"Tray menu forced theme color: {color_name}")
 
         try:
-            d = Daemon()
+            applied_any, _wp = Daemon().force_apply(color_name)
 
-            wp = d.desktop_env.get_wallpaper()
-
-            if wp:
-                MANUAL_WALL.add_wall(wp, color_name)
-
-                themes = ThemeService.get_themes_for_color(color_name)
-
-                applied_any = False
-
-                for k, v in themes.items():
-                    if d.desktop_env.apply_theme(k, v):
-                        applied_any = True
-
-                if applied_any:
-                    ThemeService.notify_change(color_name)
-
-                    log.info(f"Theme successfully applied from Tray: {color_name}")
+            if applied_any:
+                log.info(f"Theme successfully applied from Tray: {color_name}")
 
         except Exception as e:
             log.error(f"Error applying forced color from Tray: {e}")

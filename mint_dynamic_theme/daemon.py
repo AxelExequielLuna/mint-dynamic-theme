@@ -52,6 +52,33 @@ class Daemon:
         self.running = False
         self.desktop_env.stop_monitoring()
 
+    def force_apply(self, color: str) -> Tuple[bool, str]:
+        """Applies a theme for the current wallpaper manually.
+
+        Registers the wallpaper->color association and applies the theme right
+        away. Returns (applied_any, wallpaper_path).
+        """
+        from .config import MANUAL_WALL
+
+        color = color.capitalize()
+        wallpaper = self.desktop_env.get_wallpaper()
+        if not wallpaper:
+            return False, ""
+
+        MANUAL_WALL.add_wall(wallpaper, color)
+
+        themes = ThemeService.get_themes_for_color(color)
+        applied_any = False
+        for kind, name in themes.items():
+            if ThemeService.theme_exists(kind, name):
+                if self.desktop_env.apply_theme(kind, name):
+                    applied_any = True
+
+        if applied_any:
+            ThemeService.notify_change(color)
+
+        return applied_any, wallpaper
+
     def _process(self) -> None:
         from .config import CONFIG_MANAGER
         if CONFIG_MANAGER.get_paused() or not self.running: return

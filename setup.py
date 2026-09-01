@@ -59,8 +59,8 @@ setup(
     author="Axeleif",
     packages=find_packages(),
     install_requires=[
-        "colorthief",
-        "watchdog",
+        "colorthief==0.2.1",
+        "watchdog==6.0.0",
     ],
     entry_points={
         "console_scripts": [
@@ -75,5 +75,5 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: POSIX :: Linux",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.8",
 )

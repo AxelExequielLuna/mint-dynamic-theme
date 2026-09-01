@@ -37,110 +37,121 @@ class DynamicConfig:
     """
 
     def __init__(self):
+        import threading
+
         self.file = CONFIG_FILE
         self.mtime = 0
+        self._lock = threading.RLock()
         self.data = {"notifications": True, "tray_autostart": False, "paused": False}
         self.load()
 
     def load(self) -> None:
         """Carga la configuración desde archivo si ha sido modificada"""
-        if not os.path.exists(self.file):
-            self.save()
-            return
-
-        try:
-            mtime = os.path.getmtime(self.file)
-            if mtime <= self.mtime:
+        with self._lock:
+            if not os.path.exists(self.file):
+                self.save()
                 return
 
-            with open(self.file, "r") as f:
-                content = f.read()
-                if not content.strip():
-                    self.data = {
-                        "notifications": True,
-                        "tray_autostart": False,
-                        "paused": False,
-                    }
-                else:
-                    loaded_data = json.loads(content)
-                    if not isinstance(loaded_data, dict):
-                        log.error("Config file contiene datos inválidos")
+            try:
+                mtime = os.path.getmtime(self.file)
+                if mtime <= self.mtime:
+                    return
+
+                with open(self.file, "r") as f:
+                    content = f.read()
+                    if not content.strip():
                         self.data = {
                             "notifications": True,
                             "tray_autostart": False,
                             "paused": False,
                         }
                     else:
-                        self.data = {
-                            **{
+                        loaded_data = json.loads(content)
+                        if not isinstance(loaded_data, dict):
+                            log.error("Config file contiene datos inválidos")
+                            self.data = {
                                 "notifications": True,
                                 "tray_autostart": False,
                                 "paused": False,
-                            },
-                            **loaded_data,
-                        }
+                            }
+                        else:
+                            self.data = {
+                                **{
+                                    "notifications": True,
+                                    "tray_autostart": False,
+                                    "paused": False,
+                                },
+                                **loaded_data,
+                            }
 
-            self.mtime = mtime
+                self.mtime = mtime
 
-        except json.JSONDecodeError as e:
-            log.error(f"Error parseando JSON en config: {e}")
-            self.data = {
-                "notifications": True,
-                "tray_autostart": False,
-                "paused": False,
-            }
-        except OSError as e:
-            log.error(f"Error leyendo config file: {e}")
+            except json.JSONDecodeError as e:
+                log.error(f"Error parseando JSON en config: {e}")
+                self.data = {
+                    "notifications": True,
+                    "tray_autostart": False,
+                    "paused": False,
+                }
+            except OSError as e:
+                log.error(f"Error leyendo config file: {e}")
 
     def save(self) -> None:
         """Guarda la configuración al archivo"""
-        try:
-            # Escribir a archivo temporal primero (atomic write)
-            temp_file = f"{self.file}.tmp"
-            with open(temp_file, "w") as f:
-                json.dump(self.data, f, indent=2)
+        with self._lock:
+            try:
+                # Escribir a archivo temporal primero (atomic write)
+                temp_file = f"{self.file}.tmp"
+                with open(temp_file, "w") as f:
+                    json.dump(self.data, f, indent=2)
 
-            # Renombrar (operación atómica en UNIX)
-            os.replace(temp_file, self.file)
-            self.mtime = os.path.getmtime(self.file)
+                # Renombrar (operación atómica en UNIX)
+                os.replace(temp_file, self.file)
+                self.mtime = os.path.getmtime(self.file)
 
-        except OSError as e:
-            log.error(f"Error guardando config: {e}")
-        except Exception as e:
-            log.error(f"Error inesperado guardando config: {e}", exc_info=True)
+            except OSError as e:
+                log.error(f"Error guardando config: {e}")
+            except Exception as e:
+                log.error(f"Error inesperado guardando config: {e}", exc_info=True)
 
     def get_notifications(self) -> bool:
         """Obtiene el estado de las notificaciones."""
-        self.load()
-        return bool(self.data.get("notifications", True))
+        with self._lock:
+            self.load()
+            return bool(self.data.get("notifications", True))
 
     def set_notifications(self, state: bool) -> None:
         """
         Establece el estado de las notificaciones.
         state: True para activar, False para desactivar
         """
-        self.data["notifications"] = bool(state)
-        self.save()
+        with self._lock:
+            self.data["notifications"] = bool(state)
+            self.save()
 
     def get_tray_autostart(self) -> bool:
         """Obtiene si el tray icon debe iniciarse automáticamente."""
-        self.load()
-        return bool(self.data.get("tray_autostart", False))
+        with self._lock:
+            self.load()
+            return bool(self.data.get("tray_autostart", False))
 
     def set_tray_autostart(self, state: bool) -> None:
         """Establece si el tray icon debe iniciarse automáticamente."""
-        self.data["tray_autostart"] = bool(state)
-        self.save()
+        with self._lock:
+            self.data["tray_autostart"] = bool(state)
+            self.save()
 
     def get_paused(self) -> bool:
         """Obtiene si el daemon de monitoreo está pausado."""
-        self.load()
-        return bool(self.data.get("paused", False))
+        with self._lock:
+            self.load()
+            return bool(self.data.get("paused", False))
 
     def set_paused(self, state: bool) -> None:
         """Establece si el daemon de monitoreo está pausado."""
-        self.data["paused"] = bool(state)
-        self.save()
+        with self._lock:
+            self.data["paused"] = bool(state)
+            self.save()
 
 
 class ManualWallpaper:

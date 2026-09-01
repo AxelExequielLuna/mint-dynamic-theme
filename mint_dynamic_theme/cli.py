@@ -5,8 +5,7 @@ import sys
 from .color import ColorService
 from .config import CONFIG_PATHS
 from .daemon import Daemon
-from .desktop.cinnamon import CinnamonDesktop  # as default or factory needed?
-from .theme import THEME_MAPPING, ThemeService
+from .theme import THEME_MAPPING
 from .utils import get_daemon_status, pid_file_manager, setup_logging
 
 # actually Daemon detects environment.
@@ -19,13 +18,9 @@ def cmd_start():
         print("Daemon is already running.")
         return
 
-    # Daemonize?
-    # Systemd service handles daemonization usually.
-    # But if running manually 'mdt start', we might want to just run blocking or fork.
-    # The original script ran blocking but had logic for PID file.
-
-    # We will run blocking here, assuming systemd or user puts it in background.
-    # But to be true to 'start' command, maybe we should just run the Daemon.run()
+    print("Starting daemon in foreground (Ctrl+C to stop).")
+    print("Tip: use the systemd user service for background autostart.")
+    print("     systemctl --user enable --now mdt")
 
     log = setup_logging()
 
@@ -79,7 +74,6 @@ def cmd_list():
 
 
 def cmd_set(args):
-    from .config import MANUAL_WALL
     from .daemon import Daemon
 
     color = args.color.capitalize()
@@ -87,37 +81,13 @@ def cmd_set(args):
         print(f"Invalid color: {color}")
         return
 
-    # Update manual config
-    # We need to know current wallpaper to set association
-    # We can instantiate a Daemon temporarily to get the desktop env and wallpaper
-    # or just use the Desktop classes directly.
-
-    d = Daemon()
-    wp = d.desktop_env.get_wallpaper()
+    applied_any, wp = Daemon().force_apply(color)
 
     if wp:
-        MANUAL_WALL.add_wall(wp, color)
-        print(f"Associated {wp} with {color}")
-
-        # If daemon is running, it should pick this up on next cycle/check.
-        # But commonly we want to apply it NOW.
-        # If daemon is running, we might need to signal it?
-        # The daemon monitors file changes (except for manual wall config which is internal).
-        # Actually Daemon._process reads MANUAL_WALL every time.
-        # So we just need to trigger a check.
-        # OR we just apply it directly here.
-
-        themes = ThemeService.get_themes_for_color(color)
-        applied_any = False
-        for k, v in themes.items():
-            if d.desktop_env.apply_theme(k, v):
-                applied_any = True
-
         if applied_any:
-            ThemeService.notify_change(color)
             print(f"Applied {color} theme.")
-    else:
-        print("Could not detect current wallpaper.")
+        else:
+            print(f"Associated {wp} with {color}, but could not apply any theme.")
 
 
 def cmd_notify(args):
