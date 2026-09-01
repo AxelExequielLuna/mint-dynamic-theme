@@ -74,6 +74,8 @@ Control the daemon using the `mdt` command:
 Configuration is stored in `$XDG_CONFIG_HOME/mint-dynamic-theme/`
 (i.e. `~/.config/mint-dynamic-theme/config.json` by default).
 Logs are in the same directory at `errors.log`.
+Set `MDT_LOG_LEVEL` (e.g. `DEBUG`, `INFO`) to change the log verbosity
+(defaults to `ERROR`).
 
 ## Development
 To run from source without installing:

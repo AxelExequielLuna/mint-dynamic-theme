@@ -1,12 +1,13 @@
 import os
 import sys
 import unittest
-from unittest.mock import patch
+from unittest.mock import mock_open, patch
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from mint_dynamic_theme.utils import (
     get_daemon_status,
+    is_mdt_process,
     is_pid_running,
     pid_file_manager,
 )
@@ -24,6 +25,41 @@ class TestIsPidRunning(unittest.TestCase):
     @patch("mint_dynamic_theme.utils.os.kill", side_effect=PermissionError)
     def test_permission_considered_running(self, mock_kill):
         self.assertTrue(is_pid_running(1234))
+
+
+class TestIsMdtProcess(unittest.TestCase):
+    def test_current_process_is_mdt(self):
+        # unittest runs under `python3 -m unittest ...`; its cmdline may or may
+        # not reference mint_dynamic_theme, so only assert a boolean result.
+        self.assertIn(is_mdt_process(os.getpid()), (True, False))
+
+    @patch(
+        "builtins.open",
+        mock_open(
+            read_data=b"/home/user/.local/bin/mdt\x00start\x00"
+        ),
+    )
+    def test_mdt_console_script(self):
+        self.assertTrue(is_mdt_process(1234))
+
+    @patch(
+        "builtins.open",
+        mock_open(
+            read_data=b"/usr/bin/python3\x00-m\x00mint_dynamic_theme.cli\x00start\x00"
+        ),
+    )
+    def test_mdt_python_module(self):
+        self.assertTrue(is_mdt_process(1234))
+
+    @patch(
+        "builtins.open",
+        mock_open(read_data=b"/usr/bin/python3\x00-m\x00unittest\x00"),
+    )
+    def test_other_process(self):
+        self.assertFalse(is_mdt_process(1234))
+
+    def test_nonexistent_pid(self):
+        self.assertFalse(is_mdt_process(1999999999))
 
 
 class TestPidFileManager(unittest.TestCase):

@@ -27,10 +27,12 @@ class RotatingFileHandlerSafe(logging.Handler):
             pass
 
 def setup_logging():
+    level_name = os.getenv("MDT_LOG_LEVEL", "ERROR").upper()
+    level = getattr(logging, level_name, logging.ERROR)
     logging.basicConfig(
-        level=logging.ERROR,
+        level=level,
         format="%(asctime)s [%(levelname)s] %(message)s",
-        handlers=[RotatingFileHandlerSafe(CONFIG_PATHS["log_file"])]
+        handlers=[RotatingFileHandlerSafe(CONFIG_PATHS["log_file"])],
     )
     return logging.getLogger("mint-dynamic-theme")
 
@@ -39,8 +41,13 @@ def pid_file_manager(pid_path: str):
     """Context manager para gestionar el archivo PID de forma segura."""
     log = logging.getLogger("mint-dynamic-theme")
     try:
-        with open(pid_path, 'w') as f:
+        fd = os.open(pid_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w") as f:
             f.write(str(os.getpid()))
+        try:
+            os.chmod(pid_path, 0o600)
+        except OSError:
+            pass
         yield pid_path
     finally:
         try:
@@ -59,6 +66,26 @@ def is_pid_running(pid: int) -> bool:
     except PermissionError:
         return True # Existe pero sin permisos
     except Exception:
+        return False
+
+def is_mdt_process(pid: int) -> bool:
+    """Verifica si el PID corresponde realmente al daemon mdt.
+
+    Evita matar un proceso ajeno cuyo PID haya sido reciclado por el sistema.
+    """
+    try:
+        with open(f"/proc/{pid}/cmdline", "rb") as f:
+            raw = f.read().decode(errors="replace")
+        argv = raw.split("\x00")
+        if not argv or not argv[0]:
+            return False
+        base = os.path.basename(argv[0])
+        is_console = base == "mdt"
+        is_python_module = base in ("python", "python3") and any(
+            "mint_dynamic_theme" in arg for arg in argv[1:]
+        )
+        return is_console or is_python_module
+    except (OSError, ValueError):
         return False
 
 def get_daemon_status() -> dict:

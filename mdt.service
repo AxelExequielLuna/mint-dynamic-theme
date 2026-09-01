@@ -5,6 +5,8 @@ Wants=graphical-session.target
 
 [Service]
 Type=simple
+# Keep config consistent no matter how the daemon is launched
+Environment=XDG_CONFIG_HOME=%h/.config
 ExecStart=%h/.local/bin/mdt start
 Restart=on-failure
 RestartSec=5

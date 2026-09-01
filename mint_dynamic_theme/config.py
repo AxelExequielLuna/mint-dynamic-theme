@@ -102,7 +102,10 @@ class DynamicConfig:
             try:
                 # Escribir a archivo temporal primero (atomic write)
                 temp_file = f"{self.file}.tmp"
-                with open(temp_file, "w") as f:
+                fd = os.open(
+                    temp_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600
+                )
+                with os.fdopen(fd, "w") as f:
                     json.dump(self.data, f, indent=2)
 
                 # Renombrar (operación atómica en UNIX)
@@ -264,7 +267,10 @@ class ManualWallpaper:
             try:
                 temp_file = f"{self.file}.tmp"
                 payload = {"walls": self.history}
-                with open(temp_file, "w") as f:
+                fd = os.open(
+                    temp_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600
+                )
+                with os.fdopen(fd, "w") as f:
                     json.dump(payload, f, indent=2)
 
                 os.replace(temp_file, self.file)

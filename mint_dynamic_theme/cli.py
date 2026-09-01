@@ -40,12 +40,21 @@ def cmd_stop():
     import signal
     import time
 
+    from .utils import is_mdt_process
+
     status = get_daemon_status()
     if status["status"] != "running":
         print("Daemon not running.")
         return
 
     pid = status["pid"]
+    if not is_mdt_process(pid):
+        print(
+            f"Refusing to stop PID {pid}: it does not look like the mdt daemon "
+            "(possible recycled PID). Remove the stale pid file manually if needed."
+        )
+        return
+
     try:
         os.kill(pid, signal.SIGTERM)
         # Wait
