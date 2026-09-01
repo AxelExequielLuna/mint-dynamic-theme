@@ -1,31 +1,34 @@
-import sys
 import argparse
 import logging
-from .utils import setup_logging, get_daemon_status, pid_file_manager
+import sys
+
+from .color import ColorService
 from .config import CONFIG_PATHS
 from .daemon import Daemon
-from .theme import ThemeService, THEME_MAPPING
-from .color import ColorService
-from .desktop.cinnamon import CinnamonDesktop # as default or factory needed? 
+from .desktop.cinnamon import CinnamonDesktop  # as default or factory needed?
+from .theme import THEME_MAPPING, ThemeService
+from .utils import get_daemon_status, pid_file_manager, setup_logging
+
 # actually Daemon detects environment.
 
 # We need to expose a way to run the daemon from CLI
+
 
 def cmd_start():
     if get_daemon_status()["status"] == "running":
         print("Daemon is already running.")
         return
 
-    # Daemonize? 
-    # Systemd service handles daemonization usually. 
+    # Daemonize?
+    # Systemd service handles daemonization usually.
     # But if running manually 'mdt start', we might want to just run blocking or fork.
     # The original script ran blocking but had logic for PID file.
-    
+
     # We will run blocking here, assuming systemd or user puts it in background.
-    # But to be true to 'start' command, maybe we should just run the Daemon.run() 
-    
+    # But to be true to 'start' command, maybe we should just run the Daemon.run()
+
     log = setup_logging()
-    
+
     # Create PID file
     try:
         with pid_file_manager(CONFIG_PATHS["pid_file"]):
@@ -35,17 +38,18 @@ def cmd_start():
         print(f"Error starting daemon: {e}")
         log.error(f"Startup error: {e}")
 
+
 def cmd_stop():
     # Helper to stop via PID
-    import signal
     import os
+    import signal
     import time
-    
+
     status = get_daemon_status()
     if status["status"] != "running":
         print("Daemon not running.")
         return
-        
+
     pid = status["pid"]
     try:
         os.kill(pid, signal.SIGTERM)
@@ -60,21 +64,24 @@ def cmd_stop():
     except Exception as e:
         print(f"Error stopping: {e}")
 
+
 def cmd_status():
     st = get_daemon_status()
     print(f"Status: {st['status']}")
     if st.get("pid"):
         print(f"PID: {st['pid']}")
 
+
 def cmd_list():
     print("Available Color Themes:")
     for color in THEME_MAPPING.keys():
         print(f" - {color}")
 
+
 def cmd_set(args):
     from .config import MANUAL_WALL
     from .daemon import Daemon
-    
+
     color = args.color.capitalize()
     if color not in THEME_MAPPING:
         print(f"Invalid color: {color}")
@@ -84,28 +91,28 @@ def cmd_set(args):
     # We need to know current wallpaper to set association
     # We can instantiate a Daemon temporarily to get the desktop env and wallpaper
     # or just use the Desktop classes directly.
-    
-    d = Daemon() 
+
+    d = Daemon()
     wp = d.desktop_env.get_wallpaper()
-    
+
     if wp:
         MANUAL_WALL.add_wall(wp, color)
         print(f"Associated {wp} with {color}")
-        
+
         # If daemon is running, it should pick this up on next cycle/check.
         # But commonly we want to apply it NOW.
-        # If daemon is running, we might need to signal it? 
+        # If daemon is running, we might need to signal it?
         # The daemon monitors file changes (except for manual wall config which is internal).
         # Actually Daemon._process reads MANUAL_WALL every time.
         # So we just need to trigger a check.
         # OR we just apply it directly here.
-        
+
         themes = ThemeService.get_themes_for_color(color)
         applied_any = False
         for k, v in themes.items():
             if d.desktop_env.apply_theme(k, v):
                 applied_any = True
-        
+
         if applied_any:
             ThemeService.notify_change(color)
             print(f"Applied {color} theme.")
@@ -115,6 +122,7 @@ def cmd_set(args):
 
 def cmd_notify(args):
     from .config import CONFIG_MANAGER
+
     state = args.state.lower()
     if state in ["on", "true", "1"]:
         CONFIG_MANAGER.set_notifications(True)
@@ -125,38 +133,40 @@ def cmd_notify(args):
     else:
         print("Error: Use 'on' or 'off'")
 
+
 def cmd_clear_history():
     from .config import MANUAL_WALL
+
     try:
         MANUAL_WALL.clear_history()
         print("✓ Manual wallpaper history cleared.")
     except Exception as e:
         print(f"Error clearing history: {e}")
 
+
 def cmd_about():
-    about_info = {
-        "app": "Mint Dynamic Theme",
-        "version": "4.0.0",
-        "author": "Axeleif",
-        "description": "Dynamic theme switcher for Linux Mint (Cinnamon, MATE, XFCE) based on wallpaper color.",
-        "commands": ["start", "stop", "status", "list", "set", "about", "notify", "clear-history", "tray", "tray-autostart"]
-    }
-    # Print as JSON for consistency with original or just text? Original used JSON.
     import json
-    print(json.dumps(about_info, indent=2))
+
+    from .metadata import APP_INFO
+
+    print(json.dumps(APP_INFO, indent=2))
+
 
 def cmd_tray():
     try:
         from .tray import MDTTrayApp
+
         print("Starting native Tray Icon...")
         app = MDTTrayApp()
         app.run()
     except Exception as e:
         print(f"Error starting tray app: {e}")
 
+
 def cmd_tray_autostart(args):
-    from .tray import manage_autostart_desktop_file
     from .config import CONFIG_MANAGER
+    from .tray import manage_autostart_desktop_file
+
     state = args.state.lower()
     if state in ["on", "true", "1"]:
         manage_autostart_desktop_file(True)
@@ -169,6 +179,7 @@ def cmd_tray_autostart(args):
     else:
         print("Error: Use 'on' or 'off'")
 
+
 def main():
     parser = argparse.ArgumentParser(description="Mint Dynamic Theme (mdt)")
     subparsers = parser.add_subparsers(dest="command")
@@ -178,18 +189,22 @@ def main():
     subparsers.add_parser("status", help="Show daemon status")
     subparsers.add_parser("list", help="List available themes")
     subparsers.add_parser("about", help="Show app information")
-    
+
     notify_parser = subparsers.add_parser("notify", help="Enable/Disable notifications")
     notify_parser.add_argument("state", help="on/off")
-    
-    set_parser = subparsers.add_parser("set", help="Manually set theme for current wallpaper")
+
+    set_parser = subparsers.add_parser(
+        "set", help="Manually set theme for current wallpaper"
+    )
     set_parser.add_argument("color", help="Color name (e.g. Red, Blue)")
 
     subparsers.add_parser("clear-history", help="Clear manual wallpaper history")
 
     subparsers.add_parser("tray", help="Start the native tray icon")
-    
-    tray_autostart_parser = subparsers.add_parser("tray-autostart", help="Enable/Disable tray autostart with the desktop")
+
+    tray_autostart_parser = subparsers.add_parser(
+        "tray-autostart", help="Enable/Disable tray autostart with the desktop"
+    )
     tray_autostart_parser.add_argument("state", help="on/off")
 
     args = parser.parse_args()
@@ -216,6 +231,7 @@ def main():
         cmd_tray_autostart(args)
     else:
         parser.print_help()
+
 
 if __name__ == "__main__":
     main()

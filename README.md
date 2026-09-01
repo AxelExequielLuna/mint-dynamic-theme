@@ -60,10 +60,20 @@ Control the daemon using the `mdt` command:
 - **Status**: `mdt status`
 - **List Themes**: `mdt list`
 - **Manual Override**: `mdt set Red` (Forces 'Red' theme for current wallpaper and remembers it)
+- **Notifications**: `mdt notify on|off`
+- **Clear History**: `mdt clear-history`
+- **About**: `mdt about`
+- **Tray Icon**: `mdt tray` (native XApp tray icon)
+- **Tray Autostart**: `mdt tray-autostart on|off`
+
+> **Note:** `mdt start` runs the daemon in the **foreground** (blocking).
+> The recommended deployment for auto-start is the systemd user service
+> (see below). The tray icon (`mdt tray`) is an alternative way to run it.
 
 ## Configuration
-Configuration is stored in `~/.cache/mint-dynamic-theme/config.json`.
-Logs are in `~/.cache/mint-dynamic-theme/errors.log`.
+Configuration is stored in `$XDG_CONFIG_HOME/mint-dynamic-theme/`
+(i.e. `~/.config/mint-dynamic-theme/config.json` by default).
+Logs are in the same directory at `errors.log`.
 
 ## Development
 To run from source without installing:

@@ -1,18 +1,25 @@
 import os
 import shutil
 import subprocess
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 from setuptools.command.install import install
+
+import mint_dynamic_theme
+
+VERSION = mint_dynamic_theme.__version__
 
 
 class PostInstallCommand(install):
     """
-    Custom install step: copies mdt.service to the user's systemd unit
-    directory (~/.config/systemd/user/) and reloads the daemon so that
-    'systemctl --user enable/start mdt' works immediately after install.
+    Paso de instalación personalizado: copia mdt.service al directorio de
+    unidades systemd del usuario (~/.config/systemd/user/) y recarga el daemon
+    para que 'systemctl --user enable/start mdt' funcione inmediatamente después
+    de la instalación.
     """
+
     def run(self):
-        # Run the standard install first
+        # Ejecutar la instalación estándar primero
         super().run()
         self._install_systemd_service()
 
@@ -22,10 +29,9 @@ class PostInstallCommand(install):
             print("[MDT] mdt.service not found – skipping systemd install.")
             return
 
-        # Resolve destination: honour $XDG_CONFIG_HOME if set
+        # Resolver destino: respetar $XDG_CONFIG_HOME si está definido
         xdg_config = os.environ.get(
-            "XDG_CONFIG_HOME",
-            os.path.join(os.path.expanduser("~"), ".config")
+            "XDG_CONFIG_HOME", os.path.join(os.path.expanduser("~"), ".config")
         )
         dest_dir = os.path.join(xdg_config, "systemd", "user")
         dest = os.path.join(dest_dir, "mdt.service")
@@ -35,10 +41,10 @@ class PostInstallCommand(install):
             shutil.copy2(src, dest)
             print(f"[MDT] Service installed → {dest}")
 
-            # Reload the systemd user daemon so the new unit is visible
+            # Recargar el daemon de systemd del usuario para que la nueva unidad sea visible
             subprocess.run(
                 ["systemctl", "--user", "daemon-reload"],
-                check=False   # Don't abort install if systemd isn't running (e.g. CI)
+                check=False,  # No abortar la instalación si systemd no está corriendo (ej. CI)
             )
             print("[MDT] systemctl --user daemon-reload  ✓")
             print("[MDT] You can now run:  systemctl --user enable --now mdt")
@@ -48,7 +54,7 @@ class PostInstallCommand(install):
 
 setup(
     name="mint-dynamic-theme",
-    version="4.0.0",
+    version=VERSION,
     description="Dynamic theme switcher for Linux Mint (Cinnamon, MATE, XFCE) based on wallpaper color.",
     author="Axeleif",
     packages=find_packages(),
@@ -66,7 +72,7 @@ setup(
     },
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: POSIX :: Linux",
     ],
     python_requires=">=3.6",

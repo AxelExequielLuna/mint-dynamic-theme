@@ -1,12 +1,11 @@
-import os
 import json
 import logging
+import os
 from contextlib import contextmanager
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 log = logging.getLogger("mint-dynamic-theme")
 
-# ==================== CONSTANTES ====================
 # ==================== CONSTANTES ====================
 HOME = os.path.expanduser("~")
 XDG_CONFIG_HOME = os.getenv("XDG_CONFIG_HOME", f"{HOME}/.config")
@@ -29,6 +28,7 @@ CONFIG_PATHS = {
 
 # Ensure config directory exists
 os.makedirs(CONFIG_DIR, exist_ok=True)
+
 
 class DynamicConfig:
     """
@@ -53,23 +53,42 @@ class DynamicConfig:
             if mtime <= self.mtime:
                 return
 
-            with open(self.file, 'r') as f:
+            with open(self.file, "r") as f:
                 content = f.read()
                 if not content.strip():
-                    self.data = {"notifications": True, "tray_autostart": False, "paused": False}
+                    self.data = {
+                        "notifications": True,
+                        "tray_autostart": False,
+                        "paused": False,
+                    }
                 else:
                     loaded_data = json.loads(content)
                     if not isinstance(loaded_data, dict):
                         log.error("Config file contiene datos inválidos")
-                        self.data = {"notifications": True, "tray_autostart": False, "paused": False}
+                        self.data = {
+                            "notifications": True,
+                            "tray_autostart": False,
+                            "paused": False,
+                        }
                     else:
-                        self.data = {**{"notifications": True, "tray_autostart": False, "paused": False}, **loaded_data}
+                        self.data = {
+                            **{
+                                "notifications": True,
+                                "tray_autostart": False,
+                                "paused": False,
+                            },
+                            **loaded_data,
+                        }
 
             self.mtime = mtime
 
         except json.JSONDecodeError as e:
             log.error(f"Error parseando JSON en config: {e}")
-            self.data = {"notifications": True, "tray_autostart": False, "paused": False}
+            self.data = {
+                "notifications": True,
+                "tray_autostart": False,
+                "paused": False,
+            }
         except OSError as e:
             log.error(f"Error leyendo config file: {e}")
 
@@ -78,7 +97,7 @@ class DynamicConfig:
         try:
             # Escribir a archivo temporal primero (atomic write)
             temp_file = f"{self.file}.tmp"
-            with open(temp_file, 'w') as f:
+            with open(temp_file, "w") as f:
                 json.dump(self.data, f, indent=2)
 
             # Renombrar (operación atómica en UNIX)
@@ -137,6 +156,7 @@ class ManualWallpaper:
         self.history = []  # type: list
         self.max_entries = max_entries
         import threading
+
         self._lock = threading.RLock()
         self.load()
 
@@ -169,7 +189,7 @@ class ManualWallpaper:
                 if mtime <= self.mtime:
                     return
 
-                with open(self.file, 'r') as f:
+                with open(self.file, "r") as f:
                     content = f.read()
                     if not content.strip():
                         self.history = []
@@ -181,7 +201,9 @@ class ManualWallpaper:
                         if isinstance(loaded, dict):
                             if "walls" in loaded:
                                 walls = loaded["walls"]
-                                raw_entries = walls if isinstance(walls, list) else [walls]
+                                raw_entries = (
+                                    walls if isinstance(walls, list) else [walls]
+                                )
                             elif "history" in loaded:
                                 raw_entries = loaded["history"]
                             elif "wallpaper" in loaded:
@@ -190,12 +212,14 @@ class ManualWallpaper:
                                 raw_entries = []
                         elif isinstance(loaded, list):
                             raw_entries = loaded
-                        
+
                         # Normalizar y deduplicar manteniendo el último
                         dedup_map = {}
                         order = []
                         for item in raw_entries:
-                            if isinstance(item, dict) and ("wallpaper" in item or "color" in item):
+                            if isinstance(item, dict) and (
+                                "wallpaper" in item or "color" in item
+                            ):
                                 wp = self._normalize_value(item.get("wallpaper"))
                                 col = self._normalize_value(item.get("color"))
                                 key = wp
@@ -209,10 +233,12 @@ class ManualWallpaper:
 
                         normalized = []
                         for k in order:
-                            normalized.append({"wallpaper": k, "color": dedup_map.get(k)})
+                            normalized.append(
+                                {"wallpaper": k, "color": dedup_map.get(k)}
+                            )
 
                         if len(normalized) > self.max_entries:
-                            normalized = normalized[-self.max_entries:]
+                            normalized = normalized[-self.max_entries :]
 
                         self.history = normalized
 
@@ -220,14 +246,14 @@ class ManualWallpaper:
 
             except (json.JSONDecodeError, OSError) as e:
                 log.error(f"Error leyendo wall file: {e}")
-                
+
     def save(self) -> None:
         """Guarda las asociaciones al archivo (atomic write)"""
         with self._lock:
             try:
                 temp_file = f"{self.file}.tmp"
                 payload = {"walls": self.history}
-                with open(temp_file, 'w') as f:
+                with open(temp_file, "w") as f:
                     json.dump(payload, f, indent=2)
 
                 os.replace(temp_file, self.file)
@@ -261,14 +287,19 @@ class ManualWallpaper:
 
             if self.history:
                 last = self.history[-1]
-                if last.get("wallpaper") == entry["wallpaper"] and last.get("color") == entry["color"]:
+                if (
+                    last.get("wallpaper") == entry["wallpaper"]
+                    and last.get("color") == entry["color"]
+                ):
                     return
 
-            new_history = [e for e in self.history if e.get("wallpaper") != entry["wallpaper"]]
+            new_history = [
+                e for e in self.history if e.get("wallpaper") != entry["wallpaper"]
+            ]
             new_history.append(entry)
 
             if len(new_history) > self.max_entries:
-                new_history = new_history[-self.max_entries:]
+                new_history = new_history[-self.max_entries :]
 
             self.history = new_history
             self.save()
@@ -277,6 +308,7 @@ class ManualWallpaper:
         with self._lock:
             self.history = []
             self.save()
+
 
 # Global instances
 CONFIG_MANAGER = DynamicConfig()
