@@ -28,3 +28,6 @@ mint_dynamic_theme/desktop/__pycache__/
 
 # Project Archive
 archive/
+
+# Local docs (not part of the repo)
+md/
