@@ -19,12 +19,19 @@ python3 -m unittest discover tests
 
 Expected Output:
 ```
-....
+........................................................
 ----------------------------------------------------------------------
-Ran 4 tests in 0.001s
+Ran N tests
 
 OK
 ```
+
+Test suites:
+- `test_config.py` — `ManualWallpaper`, `DynamicConfig`
+- `test_core.py` — `ColorService`, `ThemeService`, Cinnamon/XFCE apply
+- `test_daemon.py` — Desktop detection, daemon `_process` (apply, pause, manual override, same-wallpaper)
+- `test_utils.py` — PID file manager, daemon status detection
+- `test_desktop.py` — `GSettingsDesktop` wallpaper/apply/monitor
 
 ## Manual Verification Steps
 1.  **Start Daemon**:

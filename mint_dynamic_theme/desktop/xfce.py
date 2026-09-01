@@ -96,3 +96,5 @@ class XfceDesktop(DesktopEnvironment):
         self.running = False
         if self.observer:
             self.observer.stop()
+            self.observer.join()
+            self.observer = None
