@@ -45,11 +45,36 @@ class TestIsMdtProcess(unittest.TestCase):
     @patch(
         "builtins.open",
         mock_open(
+            read_data=b"/usr/bin/python3\x00/home/axel/.local/bin/mdt\x00start\x00"
+        ),
+    )
+    def test_mdt_running_via_shebang(self):
+        self.assertTrue(is_mdt_process(1234))
+
+    @patch(
+        "builtins.open",
+        mock_open(
             read_data=b"/usr/bin/python3\x00-m\x00mint_dynamic_theme.cli\x00start\x00"
         ),
     )
     def test_mdt_python_module(self):
         self.assertTrue(is_mdt_process(1234))
+
+    @patch(
+        "builtins.open",
+        mock_open(
+            read_data=b"/home/user/.local/bin/mdt\x00tray\x00"
+        ),
+    )
+    def test_mdt_tray_is_not_daemon(self):
+        self.assertFalse(is_mdt_process(1234))
+
+    @patch(
+        "builtins.open",
+        mock_open(read_data=b"/usr/bin/mpris-proxy\x00"),
+    )
+    def test_recycled_foreign_pid(self):
+        self.assertFalse(is_mdt_process(1234))
 
     @patch(
         "builtins.open",
@@ -95,7 +120,8 @@ class TestGetDaemonStatus(unittest.TestCase):
             self.assertEqual(get_daemon_status(), {"status": "stopped"})
 
     @patch("mint_dynamic_theme.utils.is_pid_running", return_value=True)
-    def test_running(self, mock_is_running):
+    @patch("mint_dynamic_theme.utils.is_mdt_process", return_value=True)
+    def test_running(self, mock_mdt, mock_is_running):
         pid_path = "/tmp/existing.pid"
         with open(pid_path, "w") as f:
             f.write("12345")
@@ -105,6 +131,23 @@ class TestGetDaemonStatus(unittest.TestCase):
             ):
                 self.assertEqual(
                     get_daemon_status(), {"status": "running", "pid": 12345}
+                )
+        finally:
+            os.remove(pid_path)
+
+    @patch("mint_dynamic_theme.utils.is_pid_running", return_value=True)
+    @patch("mint_dynamic_theme.utils.is_mdt_process", return_value=False)
+    def test_recycled_pid_treated_as_dead(self, mock_mdt, mock_is_running):
+        pid_path = "/tmp/existing.pid"
+        with open(pid_path, "w") as f:
+            f.write("12345")
+        try:
+            with patch(
+                "mint_dynamic_theme.utils.CONFIG_PATHS", {"pid_file": pid_path}
+            ):
+                self.assertEqual(
+                    get_daemon_status(),
+                    {"status": "dead", "pid": 12345, "stale": True},
                 )
         finally:
             os.remove(pid_path)

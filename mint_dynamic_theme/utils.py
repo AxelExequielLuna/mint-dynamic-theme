@@ -71,22 +71,27 @@ def is_pid_running(pid: int) -> bool:
 def is_mdt_process(pid: int) -> bool:
     """Verifica si el PID corresponde realmente al daemon mdt.
 
-    Evita matar un proceso ajeno cuyo PID haya sido reciclado por el sistema.
+    Se compara el cmdline del proceso y se exige el subcomando ``start``,
+    de modo que un PID reciclado (proceso ajeno) o el propio tray
+    (``mdt tray``) no sean confundidos con el daemon.
     """
     try:
         with open(f"/proc/{pid}/cmdline", "rb") as f:
             raw = f.read().decode(errors="replace")
-        argv = raw.split("\x00")
-        if not argv or not argv[0]:
-            return False
-        base = os.path.basename(argv[0])
-        is_console = base == "mdt"
-        is_python_module = base in ("python", "python3") and any(
-            "mint_dynamic_theme" in arg for arg in argv[1:]
-        )
-        return is_console or is_python_module
     except (OSError, ValueError):
         return False
+    argv = raw.split("\x00")
+    args = [a for a in argv if a]
+    if not args:
+        return False
+    base0 = os.path.basename(args[0])
+    if base0 not in ("mdt", "python", "python3"):
+        return False
+    rest = args[1:]
+    mdt_marker = base0 == "mdt" or any(
+        os.path.basename(a) == "mdt" or "mint_dynamic_theme" in a for a in rest
+    )
+    return mdt_marker and "start" in rest
 
 def get_daemon_status() -> dict:
     pid_file = CONFIG_PATHS["pid_file"]
@@ -99,6 +104,11 @@ def get_daemon_status() -> dict:
                 pid = int(content)
 
             status = "running" if is_pid_running(pid) else "dead"
+            if status == "running":
+                if not is_mdt_process(pid):
+                    # PID reciclado: hay un proceso corriendo con ese PID
+                    # pero NO es el daemon mdt. Tratar como muerto/obsoleto.
+                    return {"status": "dead", "pid": pid, "stale": True}
             return {"status": status, "pid": pid}
         except Exception as e:
             return {"status": "error", "error": str(e)}

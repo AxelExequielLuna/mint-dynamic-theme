@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 import sys
 
 from .color import ColorService
@@ -14,9 +15,18 @@ from .utils import get_daemon_status, pid_file_manager, setup_logging
 
 
 def cmd_start():
-    if get_daemon_status()["status"] == "running":
+    status = get_daemon_status()
+    if status["status"] == "running":
         print("Daemon is already running.")
         return
+
+    # El pid file puede referir a un proceso muerto o a un PID reciclado
+    # de otro proceso. Se elimina para que el daemon pueda arrancar.
+    try:
+        if os.path.exists(CONFIG_PATHS["pid_file"]):
+            os.remove(CONFIG_PATHS["pid_file"])
+    except OSError as e:
+        print(f"Warning: could not remove stale pid file: {e}")
 
     print("Starting daemon in foreground (Ctrl+C to stop).")
     print("Tip: use the systemd user service for background autostart.")
