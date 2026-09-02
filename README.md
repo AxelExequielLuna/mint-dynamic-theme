@@ -17,30 +17,42 @@ A daemon that automatically changes your GTK, Icon, and Desktop theme based on y
 
 ### Recommended: install the .deb package
 
-Prebuilt `.deb` packages are provided for every base distribution
-(`ubuntu-24.04` and `ubuntu-22.04` for the Mint Ubuntu edition; `debian-12`
-and `debian-13` for LMDE). Each package bundles an isolated Python venv, a
-`/usr/bin/mdt` launcher, a systemd user unit and the tray autostart.
+Prebuilt or locally built `.deb` files live in `dist/deb/<base>/`, one per
+base distribution (`ubuntu-24.04` and `ubuntu-22.04` for the Mint Ubuntu
+edition; `debian-12` and `debian-13` for LMDE). Each package bundles an
+isolated Python venv (Python version matching the base), a `/usr/bin/mdt`
+launcher, a systemd user unit and the tray autostart.
 
-1. Grab the `.deb` matching your system
-   (`mint-dynamic-theme_<ver>-1_all.deb`) and verify its SHA-256 checksum
-   against `SHA256SUMS-<ver>.txt`:
+**Step by step:**
+
+1. **Get the package for your system.**
+   - Already built locally: `dist/deb/<base>/mint-dynamic-theme_<ver>-1_all.deb`.
+   - Or build it yourself: `python3 scripts/build_deb.py --targets <distro:version>` (see *Build the .deb package* below).
+2. **Pick the right one:**
+   - Mint **Ubuntu** edition → the `ubuntu-*` file matching your Ubuntu base (`lsb_release -cs`; e.g. 24.04 → `ubuntu-24.04`).
+   - **LMDE** → the `debian-*` file matching your Debian base (LMDE 7 = Debian 13 → `debian-13`).
+3. **Verify the checksum** (recommended). From `dist/deb/` so the relative paths match:
    ```bash
+   cd dist/deb
    sha256sum -c SHA256SUMS-4.0.1.txt --ignore-missing
    ```
-2. Install it (apt resolves the GTK/XApp dependencies automatically):
+4. **Install** — `apt` resolves the GTK/XApp dependencies automatically:
    ```bash
    sudo apt install ./mint-dynamic-theme_4.0.1-1_all.deb
    ```
-3. Enable the daemon for auto-start:
+5. **Enable and start the daemon:**
    ```bash
    systemctl --user enable --now mdt
-   mdt status
+   mdt status          # should print "running"
    ```
-   The tray icon starts automatically on your next login.
+6. **Tray icon:** starts automatically on your next login. To start it now:
+   ```bash
+   mdt tray
+   ```
+7. **Sanity check:** `mdt about` prints the installed version.
 
-To upgrade later, install the newer `.deb` the same way (your config in
-`~/.config/mint-dynamic-theme/` is preserved). `sudo apt remove
+To upgrade later, install the newer `.deb` with the same step 4 (your config
+in `~/.config/mint-dynamic-theme/` is preserved). `sudo apt remove
 mint-dynamic-theme` keeps that config; `sudo apt purge mint-dynamic-theme`
 deletes it.
 
