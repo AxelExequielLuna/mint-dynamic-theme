@@ -1,0 +1,6 @@
+mint-dynamic-theme (4.0.1-1) unstable; urgency=medium
+
+  * Empaquetado inicial como .deb con dh-virtualenv (venv embebido).
+  * Unidad systemd de usuario y autostart del tray incluidos.
+
+ -- Axel Luna <axel@localhost>  Tue, 01 Sep 2026 20:40:00 -0300

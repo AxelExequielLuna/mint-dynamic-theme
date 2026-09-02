@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Mint Dynamic Theme Tray
+Comment=Arranca el daemon de Mint Dynamic Theme y su bandeja del sistema
+Exec=sh -c 'systemctl --user start mdt 2>/dev/null; exec mdt tray'
+Icon=preferences-desktop-wallpaper
+Terminal=false
+X-GNOME-Autostart-enabled=true
+Hidden=false
+NoDisplay=false
+Categories=Utility;Settings;

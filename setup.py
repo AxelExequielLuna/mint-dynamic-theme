@@ -61,6 +61,7 @@ setup(
     install_requires=[
         "colorthief==0.2.1",
         "watchdog==6.0.0",
+        "Pillow==11.1.0",
     ],
     entry_points={
         "console_scripts": [

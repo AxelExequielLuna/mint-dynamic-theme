@@ -1,0 +1,13 @@
+[Unit]
+Description=Mint Dynamic Theme Daemon
+After=graphical-session.target
+Wants=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/mdt start
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
