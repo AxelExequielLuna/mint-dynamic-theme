@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=Mint Dynamic Theme Tray
-Comment=Arranca el daemon de Mint Dynamic Theme y su bandeja del sistema
+Comment=Starts the Mint Dynamic Theme daemon and its system tray
 Exec=sh -c 'systemctl --user start mdt 2>/dev/null; exec mdt tray'
 Icon=preferences-desktop-wallpaper
 Terminal=false

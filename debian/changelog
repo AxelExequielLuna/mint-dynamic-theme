@@ -1,6 +1,12 @@
+mint-dynamic-theme (4.0.2-1) unstable; urgency=medium
+
+  * New version 4.0.2.
+
+ -- Axel Luna <me@axel-luna.com.ar>  Wed, 02 Sep 2026 15:16:16 -0300
+
 mint-dynamic-theme (4.0.1-1) unstable; urgency=medium
 
-  * Empaquetado inicial como .deb con dh-virtualenv (venv embebido).
-  * Unidad systemd de usuario y autostart del tray incluidos.
+  * Initial packaging as a .deb with dh-virtualenv (embedded venv).
+  * User systemd unit and tray autostart included.
 
- -- Axel Luna <axel@localhost>  Tue, 01 Sep 2026 20:40:00 -0300
+ -- Axel Luna <me@axel-luna.com.ar>  Tue, 01 Sep 2026 20:40:00 -0300

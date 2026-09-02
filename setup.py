@@ -12,14 +12,14 @@ VERSION = mint_dynamic_theme.__version__
 
 class PostInstallCommand(install):
     """
-    Paso de instalación personalizado: copia mdt.service al directorio de
-    unidades systemd del usuario (~/.config/systemd/user/) y recarga el daemon
-    para que 'systemctl --user enable/start mdt' funcione inmediatamente después
-    de la instalación.
+    Custom install step: copies mdt.service to the user's systemd unit
+    directory (~/.config/systemd/user/) and reloads the daemon so that
+    'systemctl --user enable/start mdt' works immediately after
+    installation.
     """
 
     def run(self):
-        # Ejecutar la instalación estándar primero
+        # Run the standard install first
         super().run()
         self._install_systemd_service()
 
@@ -29,7 +29,7 @@ class PostInstallCommand(install):
             print("[MDT] mdt.service not found – skipping systemd install.")
             return
 
-        # Resolver destino: respetar $XDG_CONFIG_HOME si está definido
+        # Resolve destination: respect $XDG_CONFIG_HOME if defined
         xdg_config = os.environ.get(
             "XDG_CONFIG_HOME", os.path.join(os.path.expanduser("~"), ".config")
         )
@@ -41,10 +41,10 @@ class PostInstallCommand(install):
             shutil.copy2(src, dest)
             print(f"[MDT] Service installed → {dest}")
 
-            # Recargar el daemon de systemd del usuario para que la nueva unidad sea visible
+            # Reload the user systemd daemon so that the new unit is visible
             subprocess.run(
                 ["systemctl", "--user", "daemon-reload"],
-                check=False,  # No abortar la instalación si systemd no está corriendo (ej. CI)
+                check=False,  # Do not abort the install if systemd is not running (e.g. CI)
             )
             print("[MDT] systemctl --user daemon-reload  ✓")
             print("[MDT] You can now run:  systemctl --user enable --now mdt")
@@ -58,6 +58,10 @@ setup(
     description="Dynamic theme switcher for Linux Mint (Cinnamon, MATE, XFCE) based on wallpaper color.",
     author="Axeleif",
     packages=find_packages(),
+    package_data={
+        "mint_dynamic_theme": ["locales/*/messages.json"],
+    },
+    include_package_data=True,
     install_requires=[
         "colorthief==0.2.1",
         "watchdog==6.0.0",

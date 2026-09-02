@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""Automata la creacion del .deb de mint-dynamic-theme con cada version.
+"""Automates the creation of the mint-dynamic-theme .deb for each version.
 
-Detecta la version desde mint_dynamic_theme/__init__.py, actualiza el
-debian/changelog si hace falta y lanza scripts/build-deb.sh en contenedores
-limpios por cada target (ubuntu:22.04, ubuntu:24.04, debian:12).
+Detects the version from mint_dynamic_theme/__init__.py, updates the
+debian/changelog if needed and launches scripts/build-deb.sh in clean
+containers for each target (ubuntu:22.04, ubuntu:24.04, debian:12).
 
-Reconstruye automaticamente cuando la version actual difiere de la ultima
-construida (stamp en dist/deb/.last-built.json). Usa --force para forzar.
+Automatically rebuilds when the current version differs from the last built
+one (stamp in dist/deb/.last-built.json). Use --force to override.
 
-Uso:
+Usage:
     python3 scripts/build_deb.py [--targets ubuntu:24.04,debian:12]
-                                 [--force] [--maintainer "Nombre <mail>"]
+                                 [--force] [--maintainer "Name <mail>"]
                                  [--check] [--out dist/deb]
 """
 import argparse
@@ -35,7 +35,7 @@ def read_version() -> str:
     init = (ROOT / "mint_dynamic_theme" / "__init__.py").read_text(encoding="utf-8")
     m = VERSION_RE.search(init)
     if not m:
-        raise SystemExit("error: no se pudo leer __version__ de __init__.py")
+        raise SystemExit("error: could not read __version__ from __init__.py")
     return m.group(1)
 
 
@@ -55,7 +55,7 @@ def ensure_changelog(version: str, maintainer: str) -> None:
     entry = (
         f"mint-dynamic-theme ({version}-1) unstable; urgency=medium\n"
         f"\n"
-        f"  * Nueva versión {version}.\n"
+        f"  * New version {version}.\n"
         f"\n"
         f" -- {maintainer}  {stamp}\n"
         f"\n"
@@ -89,7 +89,7 @@ def build_target(image: str, out_dir: Path, force: bool = False, version: str = 
     target_dir = out_dir / slug
     artifacts = list(target_dir.glob(f"mint-dynamic-theme_{version}-1_*.deb"))
     if artifacts and not force:
-        print(f"[skip] {image}: ya existe {artifacts[0].name}")
+        print(f"[skip] {image}: {artifacts[0].name} already exists")
         return False
     for a in artifacts:
         a.unlink()
@@ -106,19 +106,19 @@ def main() -> int:
     parser.add_argument(
         "--targets",
         default=",".join(DEFAULT_TARGETS),
-        help="imágenes base separadas por coma (default: %(default)s)",
+        help="comma-separated base images (default: %(default)s)",
     )
-    parser.add_argument("--force", action="store_true", help="reconstruir aunque ya exista")
+    parser.add_argument("--force", action="store_true", help="rebuild even if it already exists")
     parser.add_argument(
         "--maintainer",
         default=os.getenv("MDT_MAINTAINER", DEFAULT_MAINTAINER),
-        help="mantenedor para debian/changelog",
+        help="maintainer for debian/changelog",
     )
     parser.add_argument("--out", default=str(ROOT / "dist" / "deb"))
     parser.add_argument(
         "--check",
         action="store_true",
-        help="solo mostrar versión y si hace falta construir, sin construir",
+        help="only show version and whether a build is needed, without building",
     )
     args = parser.parse_args()
 
@@ -132,14 +132,14 @@ def main() -> int:
     built_targets = set(state.get("targets", []))
     pending = [t for t in targets if slugify(t) not in built_targets or args.force]
 
-    print(f"Versión actual: {version}")
-    print(f"Última construida: {built_version or '(ninguna)'}")
+    print(f"Current version: {version}")
+    print(f"Last built: {built_version or '(none)'}")
 
     if args.check:
         if version == built_version and not pending and not args.force:
-            print("Sin cambios: no hace falta reconstruir.")
+            print("No changes: no rebuild needed.")
         else:
-            print(f"Pendientes de construir: {', '.join(pending) if pending else '—'}")
+            print(f"Pending builds: {', '.join(pending) if pending else '—'}")
         return 0
 
     ensure_changelog(version, args.maintainer)
@@ -151,13 +151,13 @@ def main() -> int:
         target_dir.mkdir(parents=True, exist_ok=True)
         artifacts = list(target_dir.glob(f"mint-dynamic-theme_{version}-1_*.deb"))
         if artifacts and not args.force:
-            print(f"[skip] {target}: ya existe {artifacts[0].name}")
+            print(f"[skip] {target}: {artifacts[0].name} already exists")
             continue
         try:
             build_target(target, out_dir, force=args.force, version=version)
             rebuilt.append(slug)
         except subprocess.CalledProcessError as e:
-            print(f"[error] {target}: build fallido ({e})", file=sys.stderr)
+            print(f"[error] {target}: build failed ({e})", file=sys.stderr)
             return 1
 
     artifacts = sorted(out_dir.glob(f"**/mint-dynamic-theme_{version}-1_*.deb"))
@@ -171,15 +171,15 @@ def main() -> int:
             json.dumps(state, indent=2), encoding="utf-8"
         )
 
-    print("\nResumen:")
+    print("\nSummary:")
     for slug, origin in ((slugify(t), t) for t in targets):
         found = sorted(out_dir.glob(f"{slug}/mint-dynamic-theme_{version}-1_*.deb"))
         if found:
-            print(f"  ✓ {origin}: {len(found)} arte(s) en {found[0].relative_to(ROOT)}")
+            print(f"  ✓ {origin}: {len(found)} artifact(s) in {found[0].relative_to(ROOT)}")
         else:
-            print(f"  - {origin}: sin artefacto")
+            print(f"  - {origin}: no artifact")
     if rebuilt:
-        print(f"Se reconstruyó para: {', '.join(rebuilt)}")
+        print(f"Rebuilt for: {', '.join(rebuilt)}")
     return 0
 
 

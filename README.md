@@ -121,6 +121,48 @@ Logs are in the same directory at `errors.log`.
 Set `MDT_LOG_LEVEL` (e.g. `DEBUG`, `INFO`) to change the log verbosity
 (defaults to `ERROR`).
 
+## Internationalization (i18n)
+
+The tray menu and desktop notifications are translatable. The UI source strings
+are English; translations live as JSON catalogs under
+`mint_dynamic_theme/locales/<lang>/messages.json`.
+
+The active language is resolved from (in order of precedence):
+
+1. The `MDT_LANG` environment variable (e.g. `MDT_LANG=es`).
+2. The `LC_ALL` / `LC_MESSAGES` / `LANG` locale variables.
+3. English as the fallback.
+
+To add a new language, copy `mint_dynamic_theme/locales/es/messages.json` to
+`locales/<lang>/messages.json` and translate each value. Please also include a
+`messages.json` for the base language (e.g. `fr`) if the regional variant
+(e.g. `fr_CA`) is not provided.
+
+### Keeping catalogs in sync (adding UI strings)
+
+The `scripts/i18n_tools.py` helper keeps the catalogs in sync with the `_("...")`
+strings used in the code. When you add a new UI string, run:
+
+```bash
+python3 scripts/i18n_tools.py update
+```
+
+This scans the package for `_("...")` / `translate("...")` calls, adds any new
+key to every catalog (using the English source string as a safe placeholder so
+the UI still works), removes stale keys and sorts the files. Existing
+translations are never overwritten — translate only the new values. The
+source-language catalog (`en`) is left untouched as it mirrors the code.
+
+To detect drift (for example in CI), run the verification:
+
+```bash
+python3 scripts/i18n_tools.py check        # report only
+python3 scripts/i18n_tools.py check --strict   # exit non-zero on any issue
+```
+
+Useful flags: `update --lang es` (one catalog), `update --all` (also populate
+the `en` catalog), `update --no-remove` (keep orphan keys).
+
 ## Development
 To run from source without installing:
 ```bash

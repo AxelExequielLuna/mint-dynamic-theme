@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 
 log = logging.getLogger("mint-dynamic-theme")
 
-# ==================== CONSTANTES ====================
+# ==================== CONSTANTS ====================
 HOME = os.path.expanduser("~")
 XDG_CONFIG_HOME = os.getenv("XDG_CONFIG_HOME", f"{HOME}/.config")
 CONFIG_DIR = f"{XDG_CONFIG_HOME}/mint-dynamic-theme"
@@ -32,8 +32,8 @@ os.makedirs(CONFIG_DIR, exist_ok=True)
 
 class DynamicConfig:
     """
-    Gestiona la configuración persistente con recarga automática.
-    Thread-safe para lecturas.
+    Manages persistent configuration with automatic reload.
+    Thread-safe for reads.
     """
 
     def __init__(self):
@@ -46,7 +46,7 @@ class DynamicConfig:
         self.load()
 
     def load(self) -> None:
-        """Carga la configuración desde archivo si ha sido modificada"""
+        """Loads configuration from file if it has been modified"""
         with self._lock:
             if not os.path.exists(self.file):
                 self.save()
@@ -68,7 +68,7 @@ class DynamicConfig:
                     else:
                         loaded_data = json.loads(content)
                         if not isinstance(loaded_data, dict):
-                            log.error("Config file contiene datos inválidos")
+                            log.error("Config file contains invalid data")
                             self.data = {
                                 "notifications": True,
                                 "tray_autostart": False,
@@ -87,20 +87,20 @@ class DynamicConfig:
                 self.mtime = mtime
 
             except json.JSONDecodeError as e:
-                log.error(f"Error parseando JSON en config: {e}")
+                log.error(f"Error parsing JSON in config: {e}")
                 self.data = {
                     "notifications": True,
                     "tray_autostart": False,
                     "paused": False,
                 }
             except OSError as e:
-                log.error(f"Error leyendo config file: {e}")
+                log.error(f"Error reading config file: {e}")
 
     def save(self) -> None:
-        """Guarda la configuración al archivo"""
+        """Saves the configuration to file"""
         with self._lock:
             try:
-                # Escribir a archivo temporal primero (atomic write)
+                # Write to a temporary file first (atomic write)
                 temp_file = f"{self.file}.tmp"
                 fd = os.open(
                     temp_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600
@@ -108,50 +108,50 @@ class DynamicConfig:
                 with os.fdopen(fd, "w") as f:
                     json.dump(self.data, f, indent=2)
 
-                # Renombrar (operación atómica en UNIX)
+                # Rename (atomic operation on UNIX)
                 os.replace(temp_file, self.file)
                 self.mtime = os.path.getmtime(self.file)
 
             except OSError as e:
-                log.error(f"Error guardando config: {e}")
+                log.error(f"Error saving config: {e}")
             except Exception as e:
-                log.error(f"Error inesperado guardando config: {e}", exc_info=True)
+                log.error(f"Unexpected error saving config: {e}", exc_info=True)
 
     def get_notifications(self) -> bool:
-        """Obtiene el estado de las notificaciones."""
+        """Gets the notification state."""
         with self._lock:
             self.load()
             return bool(self.data.get("notifications", True))
 
     def set_notifications(self, state: bool) -> None:
         """
-        Establece el estado de las notificaciones.
-        state: True para activar, False para desactivar
+        Sets the notification state.
+        state: True to enable, False to disable
         """
         with self._lock:
             self.data["notifications"] = bool(state)
             self.save()
 
     def get_tray_autostart(self) -> bool:
-        """Obtiene si el tray icon debe iniciarse automáticamente."""
+        """Gets whether the tray icon should start automatically."""
         with self._lock:
             self.load()
             return bool(self.data.get("tray_autostart", False))
 
     def set_tray_autostart(self, state: bool) -> None:
-        """Establece si el tray icon debe iniciarse automáticamente."""
+        """Sets whether the tray icon should start automatically."""
         with self._lock:
             self.data["tray_autostart"] = bool(state)
             self.save()
 
     def get_paused(self) -> bool:
-        """Obtiene si el daemon de monitoreo está pausado."""
+        """Gets whether the monitoring daemon is paused."""
         with self._lock:
             self.load()
             return bool(self.data.get("paused", False))
 
     def set_paused(self, state: bool) -> None:
-        """Establece si el daemon de monitoreo está pausado."""
+        """Sets whether the monitoring daemon is paused."""
         with self._lock:
             self.data["paused"] = bool(state)
             self.save()
@@ -159,9 +159,9 @@ class DynamicConfig:
 
 class ManualWallpaper:
     """
-    Gestiona el set persistente de asociaciones wallpaper->color.
-    Solo almacena el wallpaper y el color (sin timestamps).
-    Thread-safe para lecturas/escrituras.
+    Manages the persistent set of wallpaper->color associations.
+    Only stores the wallpaper and the color (without timestamps).
+    Thread-safe for reads/writes.
     """
 
     def __init__(self, max_entries: int = 256):
@@ -185,7 +185,7 @@ class ManualWallpaper:
         return {"wallpaper": wp, "color": col}
 
     def load(self) -> None:
-        """Carga las asociaciones desde el archivo si ha sido modificado"""
+        """Loads associations from file if it has been modified"""
         with self._lock:
             if not os.path.exists(self.file):
                 try:
@@ -211,7 +211,7 @@ class ManualWallpaper:
                         loaded = json.loads(content)
                         raw_entries = []
 
-                        # Compatibilidad con diferentes formatos antiguos
+                        # Backward compatibility with different old formats
                         if isinstance(loaded, dict):
                             if "walls" in loaded:
                                 walls = loaded["walls"]
@@ -227,7 +227,7 @@ class ManualWallpaper:
                         elif isinstance(loaded, list):
                             raw_entries = loaded
 
-                        # Normalizar y deduplicar manteniendo el último
+                        # Normalize and deduplicate keeping the last one
                         dedup_map = {}
                         order = []
                         for item in raw_entries:
@@ -259,10 +259,10 @@ class ManualWallpaper:
                 self.mtime = mtime
 
             except (json.JSONDecodeError, OSError) as e:
-                log.error(f"Error leyendo wall file: {e}")
+                log.error(f"Error reading wall file: {e}")
 
     def save(self) -> None:
-        """Guarda las asociaciones al archivo (atomic write)"""
+        """Saves the associations to file (atomic write)"""
         with self._lock:
             try:
                 temp_file = f"{self.file}.tmp"
@@ -280,10 +280,10 @@ class ManualWallpaper:
                     pass
 
             except OSError as e:
-                log.error(f"Error guardando wall file: {e}")
+                log.error(f"Error saving wall file: {e}")
 
     def get_current(self) -> dict:
-        """Devuelve la asociación más reciente"""
+        """Returns the most recent association"""
         with self._lock:
             self.load()
             if not self.history:
@@ -297,7 +297,7 @@ class ManualWallpaper:
             return [dict(entry) for entry in self.history]
 
     def add_wall(self, wallpaper: Optional[str], color: Optional[str]) -> None:
-        """Añade o actualiza la asociación wallpaper->color"""
+        """Adds or updates the wallpaper->color association"""
         with self._lock:
             self.load()
             entry = self._normalize_entry(wallpaper, color)

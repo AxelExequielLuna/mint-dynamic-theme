@@ -1,6 +1,8 @@
 import logging
 import os
 
+from .i18n import _, preload_catalogs
+
 # Set up logging
 log = logging.getLogger("mint-dynamic-theme")
 
@@ -43,7 +45,7 @@ def manage_autostart_desktop_file(enabled: bool) -> None:
                 "NoDisplay=false\n"
                 "X-GNOME-Autostart-enabled=true\n"
                 "Name=Mint Dynamic Theme Tray\n"
-                "Comment=Bandeja del sistema para Mint Dynamic Theme\n"
+                f"Comment={_('System tray for Mint Dynamic Theme')}\n"
                 "Icon=preferences-desktop-wallpaper\n"
                 "Categories=Utility;Settings;\n"
             )
@@ -122,29 +124,29 @@ class MDTTrayApp:
         if self.status_item:
             if is_running:
                 if is_paused:
-                    self.status_item.set_label("Estado: Pausado ⏸")
+                    self.status_item.set_label(_("State: Paused ⏸"))
 
                 else:
-                    self.status_item.set_label("Estado: Activo 🟢")
+                    self.status_item.set_label(_("State: Active 🟢"))
 
             else:
-                self.status_item.set_label("Estado: No Ejecutando 🔴")
+                self.status_item.set_label(_("State: Not Running 🔴"))
 
         if self.pause_item:
             self.pause_item.set_sensitive(is_running)
 
             if is_paused:
-                self.pause_item.set_label("Reanudar Monitoreo")
+                self.pause_item.set_label(_("Resume Monitoring"))
 
             else:
-                self.pause_item.set_label("Pausar Monitoreo")
+                self.pause_item.set_label(_("Pause Monitoring"))
 
     def build_menu(self) -> Gtk.Menu:
 
         menu = Gtk.Menu()
 
         # Status
-        self.status_item = Gtk.MenuItem(label="Estado: Cargando...")
+        self.status_item = Gtk.MenuItem(label=_("State: Loading..."))
 
         self.status_item.set_sensitive(False)
 
@@ -153,14 +155,14 @@ class MDTTrayApp:
         menu.append(Gtk.SeparatorMenuItem())
 
         # Pause/Resume
-        self.pause_item = Gtk.MenuItem(label="Pausar Monitoreo")
+        self.pause_item = Gtk.MenuItem(label=_("Pause Monitoring"))
 
         self.pause_item.connect("activate", self.on_toggle_pause)
 
         menu.append(self.pause_item)
 
         # Force color submenu
-        color_menu_item = Gtk.MenuItem(label="Forzar Color de Tema")
+        color_menu_item = Gtk.MenuItem(label=_("Force Theme Color"))
 
         color_sub = Gtk.Menu()
 
@@ -178,7 +180,7 @@ class MDTTrayApp:
         menu.append(Gtk.SeparatorMenuItem())
 
         # Clear history
-        clear_history_item = Gtk.MenuItem(label="Limpiar Historial de Fondos")
+        clear_history_item = Gtk.MenuItem(label=_("Clear Wallpaper History"))
 
         clear_history_item.connect("activate", self.on_clear_history)
 
@@ -195,7 +197,7 @@ class MDTTrayApp:
 
         # Tray Notification
 
-        self.notification_item = Gtk.CheckMenuItem(label="Notificaciones")
+        self.notification_item = Gtk.CheckMenuItem(label=_("Notifications"))
 
         self.notification_item.set_active(CONFIG_MANAGER.get_notifications())
 
@@ -206,14 +208,14 @@ class MDTTrayApp:
         menu.append(Gtk.SeparatorMenuItem())
 
         # About
-        about_item = Gtk.MenuItem(label="Acerca de")
+        about_item = Gtk.MenuItem(label=_("About"))
 
         about_item.connect("activate", self.on_about)
 
         menu.append(about_item)
 
         # Exit
-        exit_item = Gtk.MenuItem(label="Cerrar Bandeja")
+        exit_item = Gtk.MenuItem(label=_("Close Tray"))
 
         exit_item.connect("activate", self.on_exit)
 
@@ -222,6 +224,10 @@ class MDTTrayApp:
         menu.show_all()
 
         self.refresh_menu_labels()
+
+        # Warm up other language catalogs in the background (non-blocking) so
+        # runtime language switches are instant without delaying startup.
+        preload_catalogs()
 
         return menu
 
@@ -266,13 +272,14 @@ class MDTTrayApp:
             flags=0,
             message_type=Gtk.MessageType.WARNING,
             buttons=Gtk.ButtonsType.OK_CANCEL,
-            text="Limpiar Historial de Fondos",
+            text=_("Clear Wallpaper History"),
         )
 
         dialog.format_secondary_text(
-            "Se eliminará todo el historial de wallpapers "
-            "y colores asociados.\n\n"
-            "Esta acción no se puede deshacer."
+            _(
+                "The entire wallpaper and associated color history will be removed.\n\n"
+                "This action cannot be undone."
+            )
         )
 
         dialog.set_title("Mint Dynamic Theme")
@@ -311,14 +318,15 @@ class MDTTrayApp:
             flags=0,
             message_type=Gtk.MessageType.WARNING,
             buttons=Gtk.ButtonsType.OK_CANCEL,
-            text="Desactivar Tray Icon",
+            text=_("Disable Tray Icon"),
         )
 
         dialog.format_secondary_text(
-            "Si desactivas el tray icon, "
-            "tendrás que volver a iniciarlo manualmente "
-            "desde la terminal usando:\n\n"
-            "mdt tray-autostart true"
+            _(
+                "If you disable the tray icon, you will have to start it again "
+                "manually from the terminal using:\n\n"
+                "mdt tray-autostart true"
+            )
         )
 
         dialog.set_title("Mint Dynamic Theme")

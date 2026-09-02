@@ -1,0 +1,19 @@
+{
+  "About": "Acerca de",
+  "Clear Wallpaper History": "Limpiar Historial de Fondos",
+  "Close Tray": "Cerrar Bandeja",
+  "Disable Tray Icon": "Desactivar Tray Icon",
+  "Dynamic Theme": "Tema Dinámico",
+  "Force Theme Color": "Forzar Color de Tema",
+  "If you disable the tray icon, you will have to start it again manually from the terminal using:\n\nmdt tray-autostart true": "Si desactivas el tray icon, tendrás que volver a iniciarlo manualmente desde la terminal usando:\n\nmdt tray-autostart true",
+  "Notifications": "Notificaciones",
+  "Pause Monitoring": "Pausar Monitoreo",
+  "Resume Monitoring": "Reanudar Monitoreo",
+  "State: Active 🟢": "Estado: Activo 🟢",
+  "State: Loading...": "Estado: Cargando...",
+  "State: Not Running 🔴": "Estado: No Ejecutando 🔴",
+  "State: Paused ⏸": "Estado: Pausado ⏸",
+  "System tray for Mint Dynamic Theme": "Bandeja del sistema para Mint Dynamic Theme",
+  "The entire wallpaper and associated color history will be removed.\n\nThis action cannot be undone.": "Se eliminará todo el historial de wallpapers y colores asociados.\n\nEsta acción no se puede deshacer.",
+  "Theme applied: {color}": "Tema aplicado: {color}"
+}

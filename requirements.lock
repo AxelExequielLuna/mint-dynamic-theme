@@ -1,5 +1,5 @@
-# Dependencias Python del paquete embebidas en el .deb (dh-virtualenv).
-# Pined para build reproducible. Generado a partir del entorno 2026-09-01.
+# Python dependencies of the package embedded in the .deb (dh-virtualenv).
+# Pinned for reproducible builds. Generated from environment 2026-09-01.
 colorthief==0.2.1
 watchdog==6.0.0
 Pillow==11.1.0

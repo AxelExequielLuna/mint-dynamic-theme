@@ -33,6 +33,22 @@ Test suites:
 - `test_utils.py` — PID file manager, daemon status detection
 - `test_desktop.py` — `GSettingsDesktop` wallpaper/apply/monitor
 
+## i18n verification
+
+The translation catalogs can drift from the `_("...")` strings in the code.
+Run the check to make sure they are in sync (add `--strict` to fail with a
+non-zero exit code, useful for CI):
+
+```bash
+python3 scripts/i18n_tools.py check --strict
+```
+
+When you add a new UI string, resync the catalogs:
+
+```bash
+python3 scripts/i18n_tools.py update
+```
+
 ## Manual Verification Steps
 1.  **Start Daemon**:
     ```bash

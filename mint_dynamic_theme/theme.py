@@ -3,6 +3,7 @@ import subprocess
 import logging
 from typing import Dict
 from .config import CONFIG_MANAGER
+from .i18n import _
 
 log = logging.getLogger("mint-dynamic-theme")
 
@@ -39,7 +40,7 @@ class ThemeService:
         if CONFIG_MANAGER.get_notifications():
             try:
                 subprocess.run(
-                    ["notify-send", "Tema Dinámico", f"Tema aplicado: {color}"],
+                    ["notify-send", _("Dynamic Theme"), _("Theme applied: {color}").format(color=color)],
                     check=False, timeout=5,
                     capture_output=True
                 )

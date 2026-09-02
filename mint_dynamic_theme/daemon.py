@@ -105,8 +105,8 @@ class Daemon:
             # The manual logic in original code was complex (checking history).
             # Here we simplify: get manual wall history, find if THIS wallpaper is there.
             
-            # Rationale based on user code:
-            # "Buscamos en el historial la entrada más reciente que coincida con este wallpaper."
+            # Rationale derived from the original behavior:
+            # "Search the history for the most recent entry matching this wallpaper."
             reversed_history = list(reversed(MANUAL_WALL.get_history()))
             for entry in reversed_history:
                 wp = entry.get("wallpaper")

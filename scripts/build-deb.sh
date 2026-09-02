@@ -1,31 +1,31 @@
 #!/usr/bin/env bash
-# Construye el paquete .deb de mint-dynamic-theme dentro de una imagen base limpia.
+# Builds the mint-dynamic-theme .deb package inside a clean base image.
 #
-# Uso:
-#   build-deb.sh <imagen-base> <dir-repo> <dir-salida> [url-git]
+# Usage:
+#   build-deb.sh <base-image> <repo-dir> <out-dir> [git-url]
 #
-# Ejemplos:
+# Examples:
 #   scripts/build-deb.sh ubuntu:24.04 "$PWD" dist/deb/ubuntu-24.04
 #   scripts/build-deb.sh debian:12    "$PWD" dist/deb/debian-12
 set -euo pipefail
 
-BASE_IMAGE="${1:?imagen base requerida (ej: ubuntu:24.04)}"
-REPO_DIR="${2:?directorio del repo requerido}"
-OUT_DIR="${3:?directorio de salida requerido}"
+BASE_IMAGE="${1:?base image required (e.g. ubuntu:24.04)}"
+REPO_DIR="${2:?repo directory required}"
+OUT_DIR="${3:?output directory required}"
 GIT_URL="${4:-}"
 
 if ! command -v docker >/dev/null 2>&1; then
-    echo "error: se requiere docker" >&2
+    echo "error: docker is required" >&2
     exit 1
 fi
 if ! docker info >/dev/null 2>&1; then
-    echo "error: el daemon de docker no responde" >&2
+    echo "error: the docker daemon is not responding" >&2
     exit 1
 fi
 
 mkdir -p "$OUT_DIR"
 
-# Hacer visible el último commit en el changelog generado (opcional).
+# Make the last commit visible in the generated changelog (optional).
 if [ -n "$GIT_URL" ]; then
     GIT_URL_ARG="-v ${GIT_URL}:/src/url:ro"
 else
@@ -61,8 +61,8 @@ dpkg-buildpackage -b -us -uc
 
 cp /tmp/*.deb /out/ 2>/dev/null || true
 chmod 644 /out/*.deb 2>/dev/null || true
-echo "--- artefactos generados ---"
+echo "--- generated artifacts ---"
 ls -la /out/*.deb
 '
 
-echo "ok: .deb en $OUT_DIR"
+echo "ok: .deb in $OUT_DIR"

@@ -16,7 +16,7 @@ except ImportError:
     COLORTHIEF_AVAILABLE = False
     log.error("ColorThief not installed.")
 
-# Umbrales
+# Thresholds
 MIN_LIGHTNESS_THRESHOLD = 0.12
 MAX_LIGHTNESS_THRESHOLD = 0.88
 MIN_SATURATION_GRAYSCALE = 0.08

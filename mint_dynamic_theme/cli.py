@@ -20,8 +20,8 @@ def cmd_start():
         print("Daemon is already running.")
         return
 
-    # El pid file puede referir a un proceso muerto o a un PID reciclado
-    # de otro proceso. Se elimina para que el daemon pueda arrancar.
+    # The pid file may refer to a dead process or to a recycled PID
+    # from another process. It is removed so that the daemon can start.
     try:
         if os.path.exists(CONFIG_PATHS["pid_file"]):
             os.remove(CONFIG_PATHS["pid_file"])

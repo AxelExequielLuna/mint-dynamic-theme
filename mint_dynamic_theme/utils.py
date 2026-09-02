@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from .config import CONFIG_PATHS, MAX_LOG_SIZE
 
 class RotatingFileHandlerSafe(logging.Handler):
-    """Handler que limita el tamaño del log"""
+    """Handler that limits the log file size"""
     def __init__(self, filename, max_bytes=MAX_LOG_SIZE):
         super().__init__()
         self.filename = filename
@@ -38,7 +38,7 @@ def setup_logging():
 
 @contextmanager
 def pid_file_manager(pid_path: str):
-    """Context manager para gestionar el archivo PID de forma segura."""
+    """Context manager for safely managing the PID file."""
     log = logging.getLogger("mint-dynamic-theme")
     try:
         fd = os.open(pid_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
@@ -54,26 +54,26 @@ def pid_file_manager(pid_path: str):
             if os.path.exists(pid_path):
                 os.remove(pid_path)
         except OSError as e:
-            log.error(f"Error eliminando PID file: {e}")
+            log.error(f"Error removing PID file: {e}")
 
 def is_pid_running(pid: int) -> bool:
-    """Verifica si un PID está corriendo."""
+    """Checks whether a PID is currently running."""
     try:
         os.kill(pid, 0)
         return True
     except ProcessLookupError:
         return False
     except PermissionError:
-        return True # Existe pero sin permisos
+        return True # Exists but without permissions
     except Exception:
         return False
 
 def is_mdt_process(pid: int) -> bool:
-    """Verifica si el PID corresponde realmente al daemon mdt.
+    """Checks whether the PID really corresponds to the mdt daemon.
 
-    Se compara el cmdline del proceso y se exige el subcomando ``start``,
-    de modo que un PID reciclado (proceso ajeno) o el propio tray
-    (``mdt tray``) no sean confundidos con el daemon.
+    The process cmdline is compared and the ``start`` subcommand is required,
+    so a recycled PID (an unrelated process) or the tray itself
+    (``mdt tray``) are not mistaken for the daemon.
     """
     try:
         with open(f"/proc/{pid}/cmdline", "rb") as f:
@@ -106,8 +106,8 @@ def get_daemon_status() -> dict:
             status = "running" if is_pid_running(pid) else "dead"
             if status == "running":
                 if not is_mdt_process(pid):
-                    # PID reciclado: hay un proceso corriendo con ese PID
-                    # pero NO es el daemon mdt. Tratar como muerto/obsoleto.
+                    # Recycled PID: there is a process running with that PID
+                    # but it is NOT the mdt daemon. Treat as dead/stale.
                     return {"status": "dead", "pid": pid, "stale": True}
             return {"status": status, "pid": pid}
         except Exception as e:
