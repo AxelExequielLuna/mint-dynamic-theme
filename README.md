@@ -15,7 +15,36 @@ A daemon that automatically changes your GTK, Icon, and Desktop theme based on y
 - `colorthief` (automatically installed)
 - `watchdog` (automatically installed)
 
-### Install
+### Recommended: install the .deb package
+
+Prebuilt `.deb` packages are provided for every base distribution
+(`ubuntu-24.04` and `ubuntu-22.04` for the Mint Ubuntu edition; `debian-12`
+and `debian-13` for LMDE). Each package bundles an isolated Python venv, a
+`/usr/bin/mdt` launcher, a systemd user unit and the tray autostart.
+
+1. Grab the `.deb` matching your system
+   (`mint-dynamic-theme_<ver>-1_all.deb`) and verify its SHA-256 checksum
+   against `SHA256SUMS-<ver>.txt`:
+   ```bash
+   sha256sum -c SHA256SUMS-4.0.1.txt --ignore-missing
+   ```
+2. Install it (apt resolves the GTK/XApp dependencies automatically):
+   ```bash
+   sudo apt install ./mint-dynamic-theme_4.0.1-1_all.deb
+   ```
+3. Enable the daemon for auto-start:
+   ```bash
+   systemctl --user enable --now mdt
+   mdt status
+   ```
+   The tray icon starts automatically on your next login.
+
+To upgrade later, install the newer `.deb` the same way (your config in
+`~/.config/mint-dynamic-theme/` is preserved). `sudo apt remove
+mint-dynamic-theme` keeps that config; `sudo apt purge mint-dynamic-theme`
+deletes it.
+
+### Alternative: install from source (pip)
 1. Clone the repository:
    ```bash
    git clone <repo-url>
@@ -82,3 +111,15 @@ To run from source without installing:
 ```bash
 python3 -m mint_dynamic_theme.cli start
 ```
+
+### Build the .deb package
+Requires Docker (`podman` can be adapted). From the repo root:
+```bash
+python3 scripts/build_deb.py                                     # build every out-of-date target
+python3 scripts/build_deb.py --targets debian:13 --force         # rebuild one target
+python3 scripts/build_deb.py --check                             # show what would be rebuilt
+```
+The version is read from `mint_dynamic_theme/__init__.py`. On a version bump
+the script regenerates `requirements.lock`, `debian/changelog`, the `.deb` for
+every target and `dist/deb/SHA256SUMS-<ver>.txt`. Artifacts land in `dist/deb/`
+(ignored by git).
