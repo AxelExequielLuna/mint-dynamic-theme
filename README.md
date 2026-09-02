@@ -40,11 +40,14 @@ launcher, a systemd user unit and the tray autostart.
    ```bash
    sudo apt install ./mint-dynamic-theme_4.0.1-1_all.deb
    ```
-5. **Enable and start the daemon:**
+5. **Daemon:** the package enables the service automatically for every user
+   (starts at their next login) and tries to start it immediately in your
+   current session. Verify:
    ```bash
-   systemctl --user enable --now mdt
    mdt status          # should print "running"
    ```
+   (If your session was not reachable during install, it will start at your
+   next login; the tray autostart handles it too.)
 6. **Tray icon:** starts automatically on your next login. To start it now:
    ```bash
    mdt tray

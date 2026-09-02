@@ -4,12 +4,27 @@ set -e
 case "$1" in
     configure)
         if systemctl --version >/dev/null 2>&1; then
-            systemctl --user daemon-reload 2>/dev/null || true
+            # Habilita el servicio para todos los usuarios (arranca en cada login).
+            systemctl --global enable mdt >/dev/null 2>&1 || true
+            # Intento de inicio inmediato en la sesion grafica activa (best-effort).
+            if command -v loginctl >/dev/null 2>&1; then
+                loginctl list-sessions --no-legend 2>/dev/null | while read -r _ _ user seat _rest; do
+                    [ -n "$user" ] || continue
+                    [ "$user" != "root" ] || continue
+                    [ -n "$seat" ] && [ "$seat" != "-" ] || continue
+                    case "$user" in
+                        *[!a-z0-9_-]*) continue ;;
+                    esac
+                    systemctl --user --machine="$user@.host" start mdt >/dev/null 2>&1 || true
+                done
+            fi
         fi
         echo "=============================================================="
         echo " Mint Dynamic Theme instalado."
-        echo " Para arrancar el daemon ahora:"
-        echo "   systemctl --user enable --now mdt"
+        echo " El servicio mdt se ha habilitado automaticamente y arranca"
+        echo " en cada inicio de sesion. Estado:"
+        echo "   systemctl --user is-enabled mdt"
+        echo "   mdt status"
         echo " El tray icon se iniciara solo en el proximo inicio de sesion."
         echo "=============================================================="
         ;;

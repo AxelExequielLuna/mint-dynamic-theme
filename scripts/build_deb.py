@@ -27,7 +27,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 VERSION_RE = re.compile(r'__version__\s*=\s*["\']([^"\']+)["\']')
-DEFAULT_TARGETS = ["ubuntu:24.04", "ubuntu:22.04", "debian:12"]
+DEFAULT_TARGETS = ["ubuntu:24.04", "ubuntu:22.04", "debian:12", "debian:13"]
 DEFAULT_MAINTAINER = "Axel Luna <me@axel-luna.com.ar>"
 
 
