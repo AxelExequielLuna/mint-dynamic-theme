@@ -1,13 +1,26 @@
 import os
+import re
 import shutil
 import subprocess
+from pathlib import Path
 
 from setuptools import find_packages, setup
 from setuptools.command.install import install
 
-import mint_dynamic_theme
+PROJECT_ROOT = Path(__file__).resolve().parent
 
-VERSION = mint_dynamic_theme.__version__
+_VERSION_RE = re.compile(r'__version__\s*=\s*["\']([^"\']+)["\']')
+
+
+def read_version() -> str:
+    init = PROJECT_ROOT / "src" / "mint_dynamic_theme" / "__init__.py"
+    m = _VERSION_RE.search(init.read_text(encoding="utf-8"))
+    if not m:
+        raise RuntimeError("could not find __version__ in the package")
+    return m.group(1)
+
+
+VERSION = read_version()
 
 
 class PostInstallCommand(install):
@@ -24,8 +37,8 @@ class PostInstallCommand(install):
         self._install_systemd_service()
 
     def _install_systemd_service(self):
-        src = os.path.join(os.path.dirname(__file__), "mdt.service")
-        if not os.path.isfile(src):
+        src = PROJECT_ROOT / "packaging" / "files" / "mdt.service"
+        if not src.is_file():
             print("[MDT] mdt.service not found – skipping systemd install.")
             return
 
@@ -57,7 +70,8 @@ setup(
     version=VERSION,
     description="Dynamic theme switcher for Linux Mint (Cinnamon, MATE, XFCE) based on wallpaper color.",
     author="Axeleif",
-    packages=find_packages(),
+    packages=find_packages("src"),
+    package_dir={"": "src"},
     package_data={
         "mint_dynamic_theme": ["locales/*/messages.json"],
     },

@@ -40,7 +40,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PKG = ROOT / "mint_dynamic_theme"
+PKG = ROOT / "src" / "mint_dynamic_theme"
 LOCALES_DIR = PKG / "locales"
 
 SOURCE_LANG = "en"

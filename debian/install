@@ -1,2 +1,0 @@
-debian/mdt.service /lib/systemd/user
-mdt-tray.desktop /etc/xdg/autostart

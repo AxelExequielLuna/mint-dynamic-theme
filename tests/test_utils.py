@@ -3,7 +3,7 @@ import sys
 import unittest
 from unittest.mock import mock_open, patch
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
 from mint_dynamic_theme.utils import (
     get_daemon_status,

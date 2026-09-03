@@ -5,8 +5,8 @@
 #   build-deb.sh <base-image> <repo-dir> <out-dir> [git-url]
 #
 # Examples:
-#   scripts/build-deb.sh ubuntu:24.04 "$PWD" dist/deb/ubuntu-24.04
-#   scripts/build-deb.sh debian:12    "$PWD" dist/deb/debian-12
+#   scripts/build/build-deb.sh ubuntu:24.04 "$PWD" dist/deb/ubuntu-24.04
+#   scripts/build/build-deb.sh debian:12    "$PWD" dist/deb/debian-12
 set -euo pipefail
 
 BASE_IMAGE="${1:?base image required (e.g. ubuntu:24.04)}"
@@ -56,6 +56,10 @@ cp -a /repo/. /tmp/mdtbuild/
 cd /tmp/mdtbuild
 rm -rf build dist *.egg-info __pycache__
 find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null || true
+
+# Map the consolidated packaging tree to the 'debian' dir dpkg-buildpackage expects.
+rm -rf /tmp/mdtbuild/debian
+cp -a /tmp/mdtbuild/packaging/debian /tmp/mdtbuild/debian
 
 dpkg-buildpackage -b -us -uc
 

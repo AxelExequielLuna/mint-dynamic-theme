@@ -27,7 +27,7 @@ launcher, a systemd user unit and the tray autostart.
 
 1. **Get the package for your system.**
    - Already built locally: `dist/deb/<base>/mint-dynamic-theme_<ver>-1_all.deb`.
-   - Or build it yourself: `python3 scripts/build_deb.py --targets <distro:version>` (see *Build the .deb package* below).
+   - Or build it yourself: `python3 scripts/build/build_deb.py --targets <distro:version>` (see *Build the .deb package* below).
 2. **Pick the right one:**
    - Mint **Ubuntu** edition → the `ubuntu-*` file matching your Ubuntu base (`lsb_release -cs`; e.g. 24.04 → `ubuntu-24.04`).
    - **LMDE** → the `debian-*` file matching your Debian base (LMDE 7 = Debian 13 → `debian-13`).
@@ -87,7 +87,7 @@ deletes it.
 3. Install Systemd Service (Optional but recommended for auto-start):
    ```bash
    mkdir -p ~/.config/systemd/user/
-   cp mdt.service ~/.config/systemd/user/
+   cp packaging/files/mdt.service ~/.config/systemd/user/
    # Ensure the ExecStart path in mdt.service points to valid `mdt` executable
    # usually ~/.local/bin/mdt
    nano ~/.config/systemd/user/mdt.service 
@@ -125,7 +125,7 @@ Set `MDT_LOG_LEVEL` (e.g. `DEBUG`, `INFO`) to change the log verbosity
 
 The tray menu and desktop notifications are translatable. The UI source strings
 are English; translations live as JSON catalogs under
-`mint_dynamic_theme/locales/<lang>/messages.json`.
+`src/mint_dynamic_theme/locales/<lang>/messages.json`.
 
 The active language is resolved from (in order of precedence):
 
@@ -133,7 +133,7 @@ The active language is resolved from (in order of precedence):
 2. The `LC_ALL` / `LC_MESSAGES` / `LANG` locale variables.
 3. English as the fallback.
 
-To add a new language, copy `mint_dynamic_theme/locales/es/messages.json` to
+To add a new language, copy `src/mint_dynamic_theme/locales/es/messages.json` to
 `locales/<lang>/messages.json` and translate each value. Please also include a
 `messages.json` for the base language (e.g. `fr`) if the regional variant
 (e.g. `fr_CA`) is not provided.
@@ -164,19 +164,25 @@ Useful flags: `update --lang es` (one catalog), `update --all` (also populate
 the `en` catalog), `update --no-remove` (keep orphan keys).
 
 ## Development
-To run from source without installing:
+To run from source without installing (uses `src/` layout, so install the
+package in editable mode once):
 ```bash
+pip install -e .            # links src/mint_dynamic_theme into site-packages
 python3 -m mint_dynamic_theme.cli start
+```
+Alternatively, without installing, put `src` on the import path:
+```bash
+PYTHONPATH=src python3 -m mint_dynamic_theme.cli start
 ```
 
 ### Build the .deb package
 Requires Docker (`podman` can be adapted). From the repo root:
 ```bash
-python3 scripts/build_deb.py                                     # build every out-of-date target
-python3 scripts/build_deb.py --targets debian:13 --force         # rebuild one target
-python3 scripts/build_deb.py --check                             # show what would be rebuilt
+python3 scripts/build/build_deb.py                              # build every out-of-date target
+python3 scripts/build/build_deb.py --targets debian:13 --force  # rebuild one target
+python3 scripts/build/build_deb.py --check                      # show what would be rebuilt
 ```
-The version is read from `mint_dynamic_theme/__init__.py`. On a version bump
-the script regenerates `requirements.lock`, `debian/changelog`, the `.deb` for
-every target and `dist/deb/SHA256SUMS-<ver>.txt`. Artifacts land in `dist/deb/`
-(ignored by git).
+The version is read from `src/mint_dynamic_theme/__init__.py`. On a version bump
+the script regenerates `requirements.lock`, `packaging/debian/changelog`, the
+`.deb` for every target and `dist/deb/SHA256SUMS-<ver>.txt`. Artifacts land in
+`dist/deb/` (ignored by git).

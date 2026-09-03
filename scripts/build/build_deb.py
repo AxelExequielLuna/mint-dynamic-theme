@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Automates the creation of the mint-dynamic-theme .deb for each version.
 
-Detects the version from mint_dynamic_theme/__init__.py, updates the
-debian/changelog if needed and launches scripts/build-deb.sh in clean
-containers for each target (ubuntu:22.04, ubuntu:24.04, debian:12).
+Detects the version from src/mint_dynamic_theme/__init__.py, updates the
+packaging/debian/changelog if needed and launches scripts/build/build-deb.sh in
+clean containers for each target (ubuntu:22.04, ubuntu:24.04, debian:12).
 
 Automatically rebuilds when the current version differs from the last built
 one (stamp in dist/deb/.last-built.json). Use --force to override.
 
 Usage:
-    python3 scripts/build_deb.py [--targets ubuntu:24.04,debian:12]
+    python3 scripts/build/build_deb.py [--targets ubuntu:24.04,debian:12]
                                  [--force] [--maintainer "Name <mail>"]
                                  [--check] [--out dist/deb]
 """
@@ -25,14 +25,14 @@ import sys
 from datetime import date
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 VERSION_RE = re.compile(r'__version__\s*=\s*["\']([^"\']+)["\']')
 DEFAULT_TARGETS = ["ubuntu:24.04", "ubuntu:22.04", "debian:12", "debian:13"]
 DEFAULT_MAINTAINER = "Axel Luna <me@axel-luna.com.ar>"
 
 
 def read_version() -> str:
-    init = (ROOT / "mint_dynamic_theme" / "__init__.py").read_text(encoding="utf-8")
+    init = (ROOT / "src" / "mint_dynamic_theme" / "__init__.py").read_text(encoding="utf-8")
     m = VERSION_RE.search(init)
     if not m:
         raise SystemExit("error: could not read __version__ from __init__.py")
@@ -44,7 +44,7 @@ def slugify(image: str) -> str:
 
 
 def ensure_changelog(version: str, maintainer: str) -> None:
-    changelog_path = ROOT / "debian" / "changelog"
+    changelog_path = ROOT / "packaging" / "debian" / "changelog"
     top = ""
     if changelog_path.exists():
         top = changelog_path.read_text(encoding="utf-8", errors="replace")
@@ -95,7 +95,7 @@ def build_target(image: str, out_dir: Path, force: bool = False, version: str = 
         a.unlink()
     print(f"[build] {image} (slug={slug}) …")
     subprocess.run(
-        ["bash", str(ROOT / "scripts" / "build-deb.sh"), image, str(ROOT), str(target_dir)],
+        ["bash", str(ROOT / "scripts" / "build" / "build-deb.sh"), image, str(ROOT), str(target_dir)],
         check=True,
     )
     return True

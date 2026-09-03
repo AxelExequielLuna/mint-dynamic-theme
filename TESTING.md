@@ -50,6 +50,12 @@ python3 scripts/i18n_tools.py update
 ```
 
 ## Manual Verification Steps
+> The package uses the `src/` layout. To run the CLI manually without
+> installing, export the source path first:
+> ```bash
+> export PYTHONPATH=src
+> ```
+
 1.  **Start Daemon**:
     ```bash
     python3 -m mint_dynamic_theme.cli start
