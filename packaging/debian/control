@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Axel Luna <me@axel-luna.com.ar>
 Build-Depends: debhelper-compat (= 13), dh-virtualenv, python3, python3-venv, python3-setuptools
 Standards-Version: 4.6.2
-Homepage: https://github.com/anomalyco/MintAutoThemeDaemon
+Homepage: https://github.com/AxelExequielLuna/mint-dynamic-theme
 
 Package: mint-dynamic-theme
 Architecture: all

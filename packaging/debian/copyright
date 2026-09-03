@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: mint-dynamic-theme
-Source: https://github.com/anomalyco/MintAutoThemeDaemon
+Source: https://github.com/AxelExequielLuna/mint-dynamic-theme
 
 Files: *
 Copyright: 2026 Axel Luna
