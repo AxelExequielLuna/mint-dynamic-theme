@@ -186,3 +186,7 @@ The version is read from `src/mint_dynamic_theme/__init__.py`. On a version bump
 the script regenerates `requirements.lock`, `packaging/debian/changelog`, the
 `.deb` for every target and `dist/deb/SHA256SUMS-<ver>.txt`. Artifacts land in
 `dist/deb/` (ignored by git).
+
+## Acknowledgements
+
+This project was developed with the assistance of LLM-based coding agents. AI-generated code was reviewed, tested, modified, and integrated by a human.
