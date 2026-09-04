@@ -1,0 +1,71 @@
+name: Release (build .debs + publish to APT repos)
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: version
+        run: |
+          V=$(python3 -c "import re;print(re.search(r'__version__\s*=\s*[^0-9]*([0-9][0-9.]*)', open('src/mint_dynamic_theme/__init__.py').read()).group(1))")
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Build .debs
+        run: |
+          python3 scripts/build/build_deb.py --force
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            dist/deb/*/*.deb
+            dist/deb/SHA256SUMS-${{ steps.version.outputs.version }}.txt
+
+  dispatch:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - apt_repo: "axel-apt-debian"
+            codename: "debian12"
+            slug: "debian-12"
+          - apt_repo: "axel-apt-debian"
+            codename: "debian13"
+            slug: "debian-13"
+          - apt_repo: "axel-apt-ubuntu"
+            codename: "ubuntu2204"
+            slug: "ubuntu-22.04"
+          - apt_repo: "axel-apt-ubuntu"
+            codename: "ubuntu2404"
+            slug: "ubuntu-24.04"
+    steps:
+      - name: Dispatch publish event to apt repo
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.APT_DISPATCH_TOKEN }}
+          repository: ${{ github.repository_owner }}/${{ matrix.apt_repo }}
+          event-type: publish
+          client-payload: |
+            {
+              "app": "mint-dynamic-theme",
+              "version": "${{ needs.build.outputs.version }}",
+              "tag": "${{ github.ref_name }}",
+              "codename": "${{ matrix.codename }}",
+              "artifact": "mint-dynamic-theme_${{ needs.build.outputs.version }}-1_all.deb",
+              "repo": "${{ github.repository }}"
+            }
