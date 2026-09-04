@@ -15,49 +15,71 @@ A daemon that automatically changes your GTK, Icon, and Desktop theme based on y
 - `colorthief` (automatically installed)
 - `watchdog` (automatically installed)
 
-### Recommended: install the .deb package
+### Recommended: install via the APT repository
 
-Prebuilt or locally built `.deb` files live in `dist/deb/<base>/`, one per
-base distribution (`ubuntu-24.04` and `ubuntu-22.04` for the Mint Ubuntu
-edition; `debian-12` and `debian-13` for LMDE). Each package bundles an
-isolated Python venv (Python version matching the base), a `/usr/bin/mdt`
-launcher, a systemd user unit and the tray autostart.
+The project ships a `.deb` package through public APT repositories hosted on
+GitHub Pages. Pick the repo that matches your edition:
+
+- **LMDE / Debian-based** → `axel-apt-debian`
+  (`debian13` = LMDE 7 / Debian 13 `trixie`, `debian12` = LMDE 6 / Debian 12 `bookworm`).
+- **Mint Ubuntu-based** → `axel-apt-ubuntu`
+  (`ubuntu2404` = Mint 22.x / Ubuntu 24.04 `noble`, `ubuntu2204` = Mint 21.x / Ubuntu 22.04 `jammy`).
 
 **Step by step:**
 
-1. **Get the package for your system.**
-   - Already built locally: `dist/deb/<base>/mint-dynamic-theme_<ver>-1_all.deb`.
-   - Or build it yourself: `python3 scripts/build/build_deb.py --targets <distro:version>` (see *Build the .deb package* below).
-2. **Pick the right one:**
-   - Mint **Ubuntu** edition → the `ubuntu-*` file matching your Ubuntu base (`lsb_release -cs`; e.g. 24.04 → `ubuntu-24.04`).
-   - **LMDE** → the `debian-*` file matching your Debian base (LMDE 7 = Debian 13 → `debian-13`).
-3. **Verify the checksum** (recommended). From `dist/deb/` so the relative paths match:
+1. **Trust the signing key** (once):
    ```bash
-   cd dist/deb
-   sha256sum -c SHA256SUMS-4.0.1.txt --ignore-missing
+   sudo install -d -m 0755 /etc/apt/keyrings
+   curl -fsSL https://AxelExequielLuna.github.io/axel-apt-debian/key.gpg | sudo tee /etc/apt/keyrings/axel.gpg >/dev/null
    ```
-4. **Install** — `apt` resolves the GTK/XApp dependencies automatically:
+2. **Add the repository.** LMDE / Debian-based (example: LMDE 7):
    ```bash
-   sudo apt install ./mint-dynamic-theme_4.0.1-1_all.deb
+   echo "deb [signed-by=/etc/apt/keyrings/axel.gpg arch=amd64] https://AxelExequielLuna.github.io/axel-apt-debian debian13 main" | sudo tee /etc/apt/sources.list.d/axel.list
    ```
-5. **Daemon:** the package enables the service automatically for every user
-   (starts at their next login) and tries to start it immediately in your
-   current session. Verify:
+   - LMDE 6 → replace `debian13` with `debian12`.
+   - Mint Ubuntu-based (Mint 22.x):
+     ```bash
+     echo "deb [signed-by=/etc/apt/keyrings/axel.gpg arch=amd64] https://AxelExequielLuna.github.io/axel-apt-ubuntu ubuntu2404 main" | sudo tee /etc/apt/sources.list.d/axel.list
+     ```
+     Mint 21.x → replace `ubuntu2404` with `ubuntu2204`.
+3. **Install.**
    ```bash
+   sudo apt update
+   sudo apt install mint-dynamic-theme
+   ```
+4. **Daemon:** the package enables the user service automatically for every
+   account (starts at the next login). To start it in your current session:
+   ```bash
+   systemctl --user start mdt
    mdt status          # should print "running"
    ```
-   (If your session was not reachable during install, it will start at your
-   next login; the tray autostart handles it too.)
-6. **Tray icon:** starts automatically on your next login. To start it now:
+5. **Tray icon:** starts automatically on your next login. To start it now:
    ```bash
    mdt tray
    ```
-7. **Sanity check:** `mdt about` prints the installed version.
+6. **Sanity check:** `mdt about` prints the installed version.
 
-To upgrade later, install the newer `.deb` with the same step 4 (your config
-in `~/.config/mint-dynamic-theme/` is preserved). `sudo apt remove
-mint-dynamic-theme` keeps that config; `sudo apt purge mint-dynamic-theme`
-deletes it.
+**Upgrade:** `sudo apt update && sudo apt install --only-upgrade mint-dynamic-theme`
+(conﬁg in `~/.config/mint-dynamic-theme/` is preserved).
+
+**Uninstall:** `sudo apt remove mint-dynamic-theme` keeps that conﬁg;
+`sudo apt purge mint-dynamic-theme` deletes it.
+
+### Alternative: install a `.deb` manually
+
+Every release also uploads the prebuilt `.deb` files
+(`mint-dynamic-theme_<ver>-1_<base>_all.deb`, one per base distribution) to the
+[GitHub Releases](https://github.com/AxelExequielLuna/mint-dynamic-theme/releases)
+page. They contain an isolated Python venv, the `/usr/bin/mdt` launcher, a
+systemd user unit and the tray autostart. Install with:
+
+```bash
+sudo apt install ./mint-dynamic-theme_<ver>-1_<base>_all.deb
+```
+
+(`apt` resolves the GTK/XApp dependencies automatically; the package enables
+the service for the next login, see steps 4–6 above.)
+You can also build the `.deb` yourself — see *Build the .deb package* below.
 
 ### Alternative: install from source (pip)
 1. Clone the repository:
