@@ -99,11 +99,13 @@ deletes it.
 
 Control the daemon using the `mdt` command:
 
+- **Version**: `mdt --version` (prints the installed version)
 - **Start**: `mdt start` (starts the daemon process)
 - **Stop**: `mdt stop`
 - **Status**: `mdt status`
 - **List Themes**: `mdt list`
 - **Manual Override**: `mdt set Red` (Forces 'Red' theme for current wallpaper and remembers it)
+- **History**: `mdt history` (lists the wallpaper→color associations in the history)
 - **Notifications**: `mdt notify on|off`
 - **Clear History**: `mdt clear-history`
 - **About**: `mdt about`

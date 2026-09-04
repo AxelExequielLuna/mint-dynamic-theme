@@ -64,6 +64,8 @@ python3 scripts/i18n_tools.py update
 3.  **Verify**: Check if your theme changes to Red.
 4.  **CLI Check**:
     ```bash
+    python3 -m mint_dynamic_theme.cli --version
+    python3 -m mint_dynamic_theme.cli history
     python3 -m mint_dynamic_theme.cli status
     python3 -m mint_dynamic_theme.cli about
     ```

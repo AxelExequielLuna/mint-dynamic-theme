@@ -3,11 +3,19 @@ import logging
 import os
 import sys
 
+from . import __version__
 from .color import ColorService
 from .config import CONFIG_PATHS
 from .daemon import Daemon
 from .theme import THEME_MAPPING
 from .utils import get_daemon_status, pid_file_manager, setup_logging
+
+
+class _Parser(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write(f"mdt: error: {message}\n")
+        sys.stderr.write(f"Try 'mdt -h' for help.\n")
+        sys.exit(2)
 
 # actually Daemon detects environment.
 
@@ -133,6 +141,21 @@ def cmd_clear_history():
         print(f"Error clearing history: {e}")
 
 
+def cmd_history():
+    from .config import MANUAL_WALL
+
+    history = MANUAL_WALL.get_history()
+    if not history:
+        print("No wallpaper associations in history.")
+        return
+
+    print(f"Wallpaper history ({len(history)} entries):")
+    for i, entry in enumerate(history, 1):
+        wp = entry.get("wallpaper") or "(none)"
+        color = entry.get("color") or "(auto)"
+        print(f"  {i}. {wp} -> {color}")
+
+
 def cmd_about():
     import json
 
@@ -170,13 +193,21 @@ def cmd_tray_autostart(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Mint Dynamic Theme (mdt)")
+    parser = _Parser(
+        prog="mdt",
+        usage="mdt [-h] [--version] <command> ...",
+        description="Mint Dynamic Theme (mdt)",
+    )
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {__version__}"
+    )
     subparsers = parser.add_subparsers(dest="command")
 
     subparsers.add_parser("start", help="Start the daemon")
     subparsers.add_parser("stop", help="Stop the daemon")
     subparsers.add_parser("status", help="Show daemon status")
     subparsers.add_parser("list", help="List available themes")
+    subparsers.add_parser("history", help="List wallpaper-color associations")
     subparsers.add_parser("about", help="Show app information")
 
     notify_parser = subparsers.add_parser("notify", help="Enable/Disable notifications")
@@ -206,6 +237,8 @@ def main():
         cmd_status()
     elif args.command == "list":
         cmd_list()
+    elif args.command == "history":
+        cmd_history()
     elif args.command == "about":
         cmd_about()
     elif args.command == "notify":
