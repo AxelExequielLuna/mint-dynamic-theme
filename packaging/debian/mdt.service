@@ -1,7 +1,5 @@
 [Unit]
 Description=Mint Dynamic Theme Daemon
-After=graphical-session.target
-Wants=graphical-session.target
 
 [Service]
 Type=simple

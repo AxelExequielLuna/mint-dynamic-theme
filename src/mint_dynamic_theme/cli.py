@@ -195,13 +195,13 @@ def cmd_tray_autostart(args):
 def main():
     parser = _Parser(
         prog="mdt",
-        usage="mdt [-h] [--version] <command> ...",
+        usage="mdt [-h] [--version] COMANDO ...",
         description="Mint Dynamic Theme (mdt)",
     )
     parser.add_argument(
         "--version", action="version", version=f"%(prog)s {__version__}"
     )
-    subparsers = parser.add_subparsers(dest="command")
+    subparsers = parser.add_subparsers(dest="command", metavar="COMANDO")
 
     subparsers.add_parser("start", help="Start the daemon")
     subparsers.add_parser("stop", help="Stop the daemon")

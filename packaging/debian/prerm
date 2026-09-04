@@ -3,21 +3,38 @@ set -e
 
 case "$1" in
     remove|purge)
-        if systemctl --version >/dev/null 2>&1; then
-            systemctl --global disable mdt >/dev/null 2>&1 || true
-            # Stops the service in the active graphical session (best-effort).
-            if command -v loginctl >/dev/null 2>&1; then
-                loginctl list-sessions --no-legend 2>/dev/null | while read -r _ _ user seat _rest; do
-                    [ -n "$user" ] || continue
-                    [ "$user" != "root" ] || continue
-                    [ -n "$seat" ] && [ "$seat" != "-" ] || continue
-                    case "$user" in
-                        *[!a-z0-9_-]*) continue ;;
-                    esac
-                    systemctl --user --machine="$user@.host" stop mdt >/dev/null 2>&1 || true
-                done
+        # Remove enablement symlinks left by `systemctl --global enable`.
+        # dpkg removes the unit file itself; we only clean the links.
+        # Deliberately use `rm`, not `systemctl`: `systemctl --global disable`
+        # followed by `loginctl`/`--machine=` calls, when run as root, was
+        # tearing down the active graphical session on some setups (stops
+        # graphical-session.target, closing all user terminals).
+        rm -f /etc/systemd/user/mdt.service \
+              /etc/systemd/user/default.target.wants/mdt.service \
+              /etc/systemd/user/graphical-session.target.wants/mdt.service \
+              2>/dev/null || true
+
+        for home in /root /home/*; do
+            [ -d "$home" ] || continue
+            rm -f "$home/.config/systemd/user/mdt.service" \
+                  "$home/.config/systemd/user/default.target.wants/mdt.service" \
+                  "$home/.config/systemd/user/graphical-session.target.wants/mdt.service" \
+                  2>/dev/null || true
+
+            # Stop a running daemon directly via its PID file, without
+            # touching the systemd session (same reason as above).
+            pidfile="$home/.config/mint-dynamic-theme/daemon.pid"
+            [ -f "$pidfile" ] || continue
+            pid=$(cat "$pidfile" 2>/dev/null || true)
+            case "$pid" in ''|*[!0-9]*) continue ;; esac
+            if [ -r "/proc/$pid/cmdline" ]; then
+                cmd=$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null || true)
+                case "$cmd" in
+                    *mdt*start*)
+                        kill -TERM "$pid" 2>/dev/null || true ;;
+                esac
             fi
-        fi
+        done
         ;;
 esac
 
