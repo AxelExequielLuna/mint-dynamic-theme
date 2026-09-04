@@ -27,12 +27,22 @@ jobs:
         run: |
           python3 scripts/build/build_deb.py --force
 
+      - name: Stage release assets (unique filenames per base)
+        run: |
+          mkdir -p dist/deb/release
+          for deb in dist/deb/*/mint-dynamic-theme_*.deb; do
+            base=$(basename "$(dirname "$deb")")
+            pkg=$(basename "$deb" _all.deb)
+            cp "$deb" "dist/deb/release/${pkg}_${base}_all.deb"
+          done
+          ls -l dist/deb/release/
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           files: |
-            dist/deb/*/*.deb
+            dist/deb/release/*.deb
             dist/deb/SHA256SUMS-${{ steps.version.outputs.version }}.txt
 
   dispatch:
@@ -43,12 +53,16 @@ jobs:
         include:
           - apt_repo: "axel-apt-debian"
             codename: "debian12"
+            slug: "debian-12"
           - apt_repo: "axel-apt-debian"
             codename: "debian13"
+            slug: "debian-13"
           - apt_repo: "axel-apt-ubuntu"
             codename: "ubuntu2204"
+            slug: "ubuntu-22.04"
           - apt_repo: "axel-apt-ubuntu"
             codename: "ubuntu2404"
+            slug: "ubuntu-24.04"
     steps:
       - name: Dispatch publish event to apt repo
         uses: peter-evans/repository-dispatch@v3
@@ -62,6 +76,6 @@ jobs:
               "version": "${{ needs.build.outputs.version }}",
               "tag": "${{ github.ref_name }}",
               "codename": "${{ matrix.codename }}",
-              "artifact": "mint-dynamic-theme_${{ needs.build.outputs.version }}-1_all.deb",
+              "artifact": "mint-dynamic-theme_${{ needs.build.outputs.version }}-1_${{ matrix.slug }}_all.deb",
               "repo": "${{ github.repository }}"
             }
